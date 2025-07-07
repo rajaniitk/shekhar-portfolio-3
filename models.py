@@ -21,6 +21,19 @@ class Dataset(db.Model):
             return json.loads(self.column_info)
         return {}
 
+    def to_dict(self):
+        """Convert Dataset to dictionary for JSON serialization"""
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'file_type': self.file_type,
+            'upload_date': self.upload_date.isoformat() if self.upload_date else None,
+            'shape_rows': self.shape_rows,
+            'shape_cols': self.shape_cols,
+            'memory_usage': self.memory_usage,
+            'column_info': self.get_column_info()
+        }
+
 class Analysis(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'), nullable=False)
@@ -37,6 +50,19 @@ class Analysis(db.Model):
         if self.results:
             return json.loads(self.results)
         return {}
+
+    def to_dict(self):
+        """Convert Analysis to dictionary for JSON serialization"""
+        return {
+            'id': self.id,
+            'dataset_id': self.dataset_id,
+            'analysis_type': self.analysis_type,
+            'created_date': self.created_date.isoformat() if self.created_date else None,
+            'results': self.get_results(),
+            'dataset': {
+                'filename': self.dataset.filename if self.dataset else 'Unknown'
+            }
+        }
 
 class ModelTraining(db.Model):
     id = db.Column(db.Integer, primary_key=True)

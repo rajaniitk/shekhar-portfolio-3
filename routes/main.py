@@ -22,25 +22,10 @@ def index():
     }
     
     # Convert datasets to dictionaries for JSON serialization
-    datasets_data = []
-    for dataset in recent_datasets:
-        datasets_data.append({
-            'id': dataset.id,
-            'filename': dataset.filename,
-            'file_type': dataset.file_type,
-            'upload_date': dataset.upload_date.isoformat() if dataset.upload_date else None,
-            'shape_rows': dataset.shape_rows,
-            'shape_cols': dataset.shape_cols
-        })
+    datasets_data = [dataset.to_dict() for dataset in recent_datasets]
     
-    analyses_data = []
-    for analysis in recent_analyses:
-        analyses_data.append({
-            'id': analysis.id,
-            'dataset_id': analysis.dataset_id,
-            'analysis_type': analysis.analysis_type,
-            'created_date': analysis.created_date.isoformat() if analysis.created_date else None
-        })
+    # Convert analyses to dictionaries for JSON serialization
+    analyses_data = [analysis.to_dict() for analysis in recent_analyses]
     
     return render_template('index.html', 
                          recent_datasets=datasets_data,
