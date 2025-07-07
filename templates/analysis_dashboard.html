@@ -34,7 +34,17 @@
                     
                     <div class="mb-3">
                         <small class="text-muted">Upload Date</small>
-                        <div>{{ dataset.upload_date[:16].replace('T', ' ') if dataset.upload_date else 'N/A' }}</div>
+                        <div>
+                            {% if dataset.upload_date %}
+                                {% if dataset.upload_date is string %}
+                                    {{ dataset.upload_date[:16].replace('T', ' ') }}
+                                {% else %}
+                                    {{ dataset.upload_date.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
                     </div>
                     
                     <hr class="border-secondary">

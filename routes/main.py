@@ -61,3 +61,29 @@ def delete_dataset(dataset_id):
     
     flash('Dataset and all associated analyses have been deleted successfully.', 'success')
     return redirect(url_for('main.index'))
+
+@main_bp.route('/debug_test')
+def debug_test():
+    """Debug route to test data serialization"""
+    from datetime import datetime
+    
+    # Test with actual database data if available
+    try:
+        dataset = Dataset.query.first()
+        if dataset:
+            dataset_dict = dataset.to_dict()
+            print("Dataset to_dict() result:")
+            print(f"  upload_date type: {type(dataset_dict['upload_date'])}")
+            print(f"  upload_date value: {dataset_dict['upload_date']}")
+            
+            # Test the template expression that's causing the error
+            if dataset_dict['upload_date']:
+                formatted_date = dataset_dict['upload_date'][:16].replace('T', ' ')
+                print(f"  formatted date: {formatted_date}")
+            
+            return f"<h1>Debug Test Results</h1><p>Dataset ID: {dataset_dict['id']}</p><p>Filename: {dataset_dict['filename']}</p><p>Upload Date: {dataset_dict['upload_date']}</p><p>Date Type: {type(dataset_dict['upload_date'])}</p>"
+        else:
+            return "<h1>Debug Test</h1><p>No datasets found in database</p>"
+            
+    except Exception as e:
+        return f"<h1>Debug Test Error</h1><p>Error: {str(e)}</p><p>Error Type: {type(e).__name__}</p>"

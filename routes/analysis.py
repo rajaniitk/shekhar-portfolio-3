@@ -14,6 +14,15 @@ def dataset_overview(dataset_id):
     dataset = Dataset.query.get_or_404(dataset_id)
     
     try:
+        # Debug: Check the dataset object
+        print(f"DEBUG: Raw dataset object - upload_date type: {type(dataset.upload_date)}")
+        print(f"DEBUG: Raw dataset object - upload_date value: {dataset.upload_date}")
+        
+        # Debug: Check the to_dict conversion
+        dataset_dict = dataset.to_dict()
+        print(f"DEBUG: to_dict result - upload_date type: {type(dataset_dict['upload_date'])}")
+        print(f"DEBUG: to_dict result - upload_date value: {dataset_dict['upload_date']}")
+        
         processor = DataProcessor()
         df, _ = processor.load_file(dataset.file_path)
         
@@ -21,12 +30,18 @@ def dataset_overview(dataset_id):
             eda_engine = EDAEngine()
             basic_stats = eda_engine.generate_basic_statistics(df)
             
+            print(f"DEBUG: About to render template with dataset_dict type: {type(dataset_dict)}")
+            print(f"DEBUG: Dataset dict keys: {dataset_dict.keys()}")
+            
             return render_template('analysis_dashboard.html', 
-                                 dataset=dataset.to_dict(),
+                                 dataset=dataset_dict,
                                  basic_stats=basic_stats,
                                  columns=list(df.columns))
     except Exception as e:
         logging.error(f"Dataset overview error: {str(e)}")
+        logging.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logging.error(f"Full traceback: {traceback.format_exc()}")
         flash(f'Error loading dataset: {str(e)}', 'error')
     
     return redirect(url_for('main.index'))

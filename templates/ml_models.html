@@ -179,7 +179,17 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <small class="text-muted">{{ model.created_date[:16].replace('T', ' ') if model.created_date else 'N/A' }}</small>
+                                    <small class="text-muted">
+                                        {% if model.created_date %}
+                                            {% if model.created_date is string %}
+                                                {{ model.created_date[:16].replace('T', ' ') }}
+                                            {% else %}
+                                                {{ model.created_date.strftime('%Y-%m-%d %H:%M') }}
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </small>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">

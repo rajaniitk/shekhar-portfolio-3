@@ -147,7 +147,17 @@
                                         <span class="text-muted">{{ dataset.shape_rows }} × {{ dataset.shape_cols }}</span>
                                     </td>
                                     <td>
-                                        <small class="text-muted">{{ dataset.upload_date[:16].replace('T', ' ') if dataset.upload_date else 'N/A' }}</small>
+                                        <small class="text-muted">
+                                            {% if dataset.upload_date %}
+                                                {% if dataset.upload_date is string %}
+                                                    {{ dataset.upload_date[:16].replace('T', ' ') }}
+                                                {% else %}
+                                                    {{ dataset.upload_date.strftime('%Y-%m-%d %H:%M') }}
+                                                {% endif %}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </small>
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
@@ -207,7 +217,15 @@
                                         Dataset: {{ analysis.dataset.filename }}
                                     </p>
                                     <small class="text-muted">
-                                        {{ analysis.created_date[:16].replace('T', ' ') if analysis.created_date else 'N/A' }}
+                                        {% if analysis.created_date %}
+                                            {% if analysis.created_date is string %}
+                                                {{ analysis.created_date[:16].replace('T', ' ') }}
+                                            {% else %}
+                                                {{ analysis.created_date.strftime('%Y-%m-%d %H:%M') }}
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
                                     </small>
                                 </div>
                             </div>
