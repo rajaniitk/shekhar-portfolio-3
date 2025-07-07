@@ -166,10 +166,10 @@
                                 </td>
                                 <td>{{ model.target_column }}</td>
                                 <td>
-                                    <small class="text-muted">{{ model.get_features()|length }} features</small>
+                                    <small class="text-muted">{{ model.features|length }} features</small>
                                 </td>
                                 <td>
-                                    {% set metrics = model.get_performance_metrics() %}
+                                    {% set metrics = model.performance_metrics %}
                                     {% if metrics.accuracy %}
                                         <span class="text-success">{{ "%.3f"|format(metrics.accuracy) }}</span>
                                     {% elif metrics.r2 %}

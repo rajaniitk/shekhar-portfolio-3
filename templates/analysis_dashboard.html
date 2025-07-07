@@ -279,16 +279,16 @@
                                             {% for column in columns %}
                                             <tr>
                                                 <td>
-                                                    <i class="fas fa-{{ 'hashtag' if column in dataset.get_column_info() and dataset.get_column_info()[column].get('dtype', '').startswith(('int', 'float')) else 'font' }} me-2"></i>
+                                                    <i class="fas fa-{{ 'hashtag' if column in dataset.column_info and dataset.column_info[column].get('dtype', '').startswith(('int', 'float')) else 'font' }} me-2"></i>
                                                     {{ column }}
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-{{ 'primary' if column in dataset.get_column_info() and dataset.get_column_info()[column].get('dtype', '').startswith(('int', 'float')) else 'success' }}">
-                                                        {{ dataset.get_column_info().get(column, {}).get('dtype', 'Unknown') }}
+                                                    <span class="badge bg-{{ 'primary' if column in dataset.column_info and dataset.column_info[column].get('dtype', '').startswith(('int', 'float')) else 'success' }}">
+                                                        {{ dataset.column_info.get(column, {}).get('dtype', 'Unknown') }}
                                                     </span>
                                                 </td>
-                                                <td>{{ dataset.shape_rows - dataset.get_column_info().get(column, {}).get('null_count', 0) }}</td>
-                                                <td>{{ dataset.get_column_info().get(column, {}).get('unique_count', 'Unknown') }}</td>
+                                                <td>{{ dataset.shape_rows - dataset.column_info.get(column, {}).get('null_count', 0) }}</td>
+                                                <td>{{ dataset.column_info.get(column, {}).get('unique_count', 'Unknown') }}</td>
                                                 <td>
                                                     <button class="btn btn-outline-primary btn-sm" onclick="analyzeColumn('{{ column }}')">
                                                         <i class="fas fa-search"></i>
