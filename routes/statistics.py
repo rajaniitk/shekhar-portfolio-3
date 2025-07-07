@@ -22,13 +22,13 @@ def statistics_page(dataset_id):
             categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
             
             return render_template('statistical_tests.html', 
-                                 dataset=dataset,
+                                 dataset=dataset.to_dict(),
                                  numeric_columns=numeric_cols,
                                  categorical_columns=categorical_cols)
     except Exception as e:
         logging.error(f"Statistics page error: {str(e)}")
     
-    return render_template('statistical_tests.html', dataset=dataset)
+    return render_template('statistical_tests.html', dataset=dataset.to_dict())
 
 @statistics_bp.route('/api/normality/<int:dataset_id>')
 def normality_tests(dataset_id):
