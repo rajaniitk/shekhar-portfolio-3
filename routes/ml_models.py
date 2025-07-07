@@ -27,16 +27,18 @@ def ml_models_page(dataset_id):
             # Get existing models for this dataset
             existing_models = ModelTraining.query.filter_by(dataset_id=dataset_id).order_by(ModelTraining.created_date.desc()).all()
             
+            existing_models_data = [model.to_dict() for model in existing_models]
+            
             return render_template('ml_models.html', 
-                                 dataset=dataset,
+                                 dataset=dataset.to_dict(),
                                  numeric_columns=numeric_cols,
                                  categorical_columns=categorical_cols,
                                  all_columns=all_cols,
-                                 existing_models=existing_models)
+                                 existing_models=existing_models_data)
     except Exception as e:
         logging.error(f"ML models page error: {str(e)}")
     
-    return render_template('ml_models.html', dataset=dataset)
+    return render_template('ml_models.html', dataset=dataset.to_dict())
 
 @ml_bp.route('/api/train/<int:dataset_id>', methods=['POST'])
 def train_model(dataset_id):

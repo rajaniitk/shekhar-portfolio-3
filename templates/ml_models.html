@@ -179,7 +179,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <small class="text-muted">{{ model.created_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    <small class="text-muted">{{ model.created_date[:16].replace('T', ' ') if model.created_date else 'N/A' }}</small>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">

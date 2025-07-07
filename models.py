@@ -100,3 +100,20 @@ class ModelTraining(db.Model):
         if self.performance_metrics:
             return json.loads(self.performance_metrics)
         return {}
+
+    def to_dict(self):
+        """Convert ModelTraining to dictionary for JSON serialization"""
+        return {
+            'id': self.id,
+            'dataset_id': self.dataset_id,
+            'model_type': self.model_type,
+            'target_column': self.target_column,
+            'features': self.get_features(),
+            'hyperparameters': self.get_hyperparameters(),
+            'performance_metrics': self.get_performance_metrics(),
+            'model_path': self.model_path,
+            'created_date': self.created_date.isoformat() if self.created_date else None,
+            'dataset': {
+                'filename': self.dataset.filename if self.dataset else 'Unknown'
+            }
+        }

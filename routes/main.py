@@ -36,13 +36,15 @@ def index():
 def dashboard():
     """Main analysis dashboard"""
     datasets = Dataset.query.order_by(Dataset.upload_date.desc()).all()
-    return render_template('analysis_dashboard.html', datasets=datasets)
+    datasets_data = [dataset.to_dict() for dataset in datasets]
+    return render_template('analysis_dashboard.html', datasets=datasets_data)
 
 @main_bp.route('/reports')
 def reports():
     """Reports and export page"""
     datasets = Dataset.query.order_by(Dataset.upload_date.desc()).all()
-    return render_template('reports.html', datasets=datasets)
+    datasets_data = [dataset.to_dict() for dataset in datasets]
+    return render_template('reports.html', datasets=datasets_data)
 
 @main_bp.route('/delete_dataset/<int:dataset_id>')
 def delete_dataset(dataset_id):

@@ -207,7 +207,7 @@
                                         Dataset: {{ analysis.dataset.filename }}
                                     </p>
                                     <small class="text-muted">
-                                        {{ analysis.created_date.strftime('%Y-%m-%d %H:%M') }}
+                                        {{ analysis.created_date[:16].replace('T', ' ') if analysis.created_date else 'N/A' }}
                                     </small>
                                 </div>
                             </div>

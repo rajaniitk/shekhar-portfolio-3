@@ -22,7 +22,7 @@ def dataset_overview(dataset_id):
             basic_stats = eda_engine.generate_basic_statistics(df)
             
             return render_template('analysis_dashboard.html', 
-                                 dataset=dataset,
+                                 dataset=dataset.to_dict(),
                                  basic_stats=basic_stats,
                                  columns=list(df.columns))
     except Exception as e:
@@ -51,7 +51,7 @@ def column_analysis_page(dataset_id):
                 }
             
             return render_template('column_analysis.html', 
-                                 dataset=dataset,
+                                 dataset=dataset.to_dict(),
                                  columns_info=columns_info)
     except Exception as e:
         logging.error(f"Column analysis page error: {str(e)}")
