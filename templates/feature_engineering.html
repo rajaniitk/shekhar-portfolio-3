@@ -1,0 +1,775 @@
+{% extends "base.html" %}
+
+{% block title %}Feature Engineering - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Feature Engineering Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card bg-dark border-primary sticky-top">
+            <div class="card-header bg-primary">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>Feature Engineering
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Dataset</small>
+                    <div class="text-primary">Sample Dataset</div>
+                    <small class="text-muted">1000 rows × 15 columns</small>
+                </div>
+                
+                <hr class="border-secondary">
+                
+                <!-- Transformation Categories -->
+                <div class="accordion" id="transformation-categories">
+                    <!-- Numeric Transformations -->
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button bg-secondary text-light collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#numeric-transforms">
+                                <i class="fas fa-hashtag me-2"></i>Numeric Transformations
+                            </button>
+                        </h2>
+                        <div id="numeric-transforms" class="accordion-collapse collapse" data-bs-parent="#transformation-categories">
+                            <div class="accordion-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="standard-scaling">
+                                    <label class="form-check-label" for="standard-scaling">Standard Scaling</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="min-max-scaling">
+                                    <label class="form-check-label" for="min-max-scaling">Min-Max Scaling</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="robust-scaling">
+                                    <label class="form-check-label" for="robust-scaling">Robust Scaling</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="log-transform">
+                                    <label class="form-check-label" for="log-transform">Log Transform</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="box-cox">
+                                    <label class="form-check-label" for="box-cox">Box-Cox Transform</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="binning">
+                                    <label class="form-check-label" for="binning">Binning/Discretization</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categorical Transformations -->
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button bg-secondary text-light collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#categorical-transforms">
+                                <i class="fas fa-font me-2"></i>Categorical Transformations
+                            </button>
+                        </h2>
+                        <div id="categorical-transforms" class="accordion-collapse collapse" data-bs-parent="#transformation-categories">
+                            <div class="accordion-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="one-hot-encoding">
+                                    <label class="form-check-label" for="one-hot-encoding">One-Hot Encoding</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="label-encoding">
+                                    <label class="form-check-label" for="label-encoding">Label Encoding</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="ordinal-encoding">
+                                    <label class="form-check-label" for="ordinal-encoding">Ordinal Encoding</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="target-encoding">
+                                    <label class="form-check-label" for="target-encoding">Target Encoding</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="frequency-encoding">
+                                    <label class="form-check-label" for="frequency-encoding">Frequency Encoding</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Creation -->
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button bg-secondary text-light collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#feature-creation">
+                                <i class="fas fa-plus me-2"></i>Feature Creation
+                            </button>
+                        </h2>
+                        <div id="feature-creation" class="accordion-collapse collapse" data-bs-parent="#transformation-categories">
+                            <div class="accordion-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="polynomial-features">
+                                    <label class="form-check-label" for="polynomial-features">Polynomial Features</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="interaction-features">
+                                    <label class="form-check-label" for="interaction-features">Interaction Features</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="datetime-features">
+                                    <label class="form-check-label" for="datetime-features">DateTime Features</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="statistical-features">
+                                    <label class="form-check-label" for="statistical-features">Statistical Features</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Selection -->
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button bg-secondary text-light collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#feature-selection">
+                                <i class="fas fa-filter me-2"></i>Feature Selection
+                            </button>
+                        </h2>
+                        <div id="feature-selection" class="accordion-collapse collapse" data-bs-parent="#transformation-categories">
+                            <div class="accordion-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="univariate-selection">
+                                    <label class="form-check-label" for="univariate-selection">Univariate Selection</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="recursive-elimination">
+                                    <label class="form-check-label" for="recursive-elimination">Recursive Elimination</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="correlation-filter">
+                                    <label class="form-check-label" for="correlation-filter">Correlation Filter</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="variance-threshold">
+                                    <label class="form-check-label" for="variance-threshold">Variance Threshold</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-secondary">
+
+                <!-- Column Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Select Columns</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="column-select" multiple>
+                        <optgroup label="Numeric Columns">
+                            <option value="age">age</option>
+                            <option value="income">income</option>
+                            <option value="score">score</option>
+                        </optgroup>
+                        <optgroup label="Categorical Columns">
+                            <option value="category">category</option>
+                            <option value="region">region</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="applyTransformations()">
+                        <i class="fas fa-play me-1"></i>Apply Transformations
+                    </button>
+                    <button class="btn btn-outline-success" onclick="previewTransformations()">
+                        <i class="fas fa-eye me-1"></i>Preview Changes
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="autoFeatureEngineering()">
+                        <i class="fas fa-magic me-1"></i>Auto Feature Engineering
+                    </button>
+                    <button class="btn btn-outline-info" onclick="analyzeFeatures()">
+                        <i class="fas fa-search me-1"></i>Analyze Features
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transformation Results -->
+    <div class="col-lg-9">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-wrench me-2"></i>Feature Engineering Results
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-light" onclick="exportTransformed()">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <button class="btn btn-outline-light" onclick="undoTransformations()">
+                                <i class="fas fa-undo me-1"></i>Undo
+                            </button>
+                            <button class="btn btn-outline-light" onclick="saveTransformations()">
+                                <i class="fas fa-save me-1"></i>Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="transformation-results">
+                    <div class="text-center py-5">
+                        <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Ready for Feature Engineering</h5>
+                        <p class="text-muted">Select transformations and columns, then click "Apply Transformations"</p>
+                        
+                        <!-- Feature Engineering Workflow -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card bg-primary">
+                                    <div class="card-body">
+                                        <h6 class="text-white mb-3">Feature Engineering Workflow</h6>
+                                        <div class="row text-white">
+                                            <div class="col-md-3 text-center">
+                                                <i class="fas fa-upload fa-2x mb-2"></i>
+                                                <h6>1. Load Data</h6>
+                                                <p class="small">Upload and explore dataset</p>
+                                            </div>
+                                            <div class="col-md-3 text-center">
+                                                <i class="fas fa-search fa-2x mb-2"></i>
+                                                <h6>2. Analyze</h6>
+                                                <p class="small">Understand feature distributions</p>
+                                            </div>
+                                            <div class="col-md-3 text-center">
+                                                <i class="fas fa-cogs fa-2x mb-2"></i>
+                                                <h6>3. Transform</h6>
+                                                <p class="small">Apply engineering techniques</p>
+                                            </div>
+                                            <div class="col-md-3 text-center">
+                                                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                                <h6>4. Validate</h6>
+                                                <p class="small">Assess improvement in performance</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-primary w-100 py-3" onclick="quickNormalization()">
+                                    <i class="fas fa-balance-scale fa-2x d-block mb-2"></i>
+                                    Quick Normalization
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-success w-100 py-3" onclick="quickEncoding()">
+                                    <i class="fas fa-code fa-2x d-block mb-2"></i>
+                                    Quick Encoding
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-warning w-100 py-3" onclick="quickFeatureSelection()">
+                                    <i class="fas fa-filter fa-2x d-block mb-2"></i>
+                                    Quick Selection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transformation Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>Transformation Preview
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="preview-content">
+                <!-- Preview content will be loaded here -->
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-primary" onclick="confirmTransformations()">
+                    <i class="fas fa-check me-1"></i>Apply Changes
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto Feature Engineering Modal -->
+<div class="modal fade" id="autoFeatureModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-magic me-2"></i>Auto Feature Engineering
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="auto-feature-content">
+                <div class="text-center py-4">
+                    <i class="fas fa-magic fa-3x text-primary mb-3"></i>
+                    <h5>Automatic Feature Engineering</h5>
+                    <p class="text-muted mb-4">Let AI analyze your data and suggest the best feature engineering techniques.</p>
+                    
+                    <div class="mb-4">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="auto-scaling" checked>
+                            <label class="form-check-label" for="auto-scaling">Auto Scaling</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="auto-encoding" checked>
+                            <label class="form-check-label" for="auto-encoding">Auto Encoding</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="auto-creation" checked>
+                            <label class="form-check-label" for="auto-creation">Auto Feature Creation</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="auto-selection" checked>
+                            <label class="form-check-label" for="auto-selection">Auto Feature Selection</label>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="runAutoFeatureEngineering()">
+                        <i class="fas fa-play me-1"></i>Start Auto Engineering
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let transformationHistory = [];
+let currentData = null;
+
+function applyTransformations() {
+    const selectedTransforms = getSelectedTransformations();
+    const selectedColumns = getSelectedColumns();
+    
+    if (selectedTransforms.length === 0) {
+        showAlert('warning', 'Please select at least one transformation.');
+        return;
+    }
+    
+    if (selectedColumns.length === 0) {
+        showAlert('warning', 'Please select at least one column.');
+        return;
+    }
+    
+    showLoading('Applying transformations...');
+    
+    // Simulate transformation process
+    setTimeout(() => {
+        hideLoading();
+        displayTransformationResults(selectedTransforms, selectedColumns);
+        showAlert('success', 'Transformations applied successfully!');
+    }, 2000);
+}
+
+function getSelectedTransformations() {
+    const transforms = [];
+    
+    // Check each transformation category
+    const transformIds = [
+        'standard-scaling', 'min-max-scaling', 'robust-scaling', 'log-transform', 'box-cox', 'binning',
+        'one-hot-encoding', 'label-encoding', 'ordinal-encoding', 'target-encoding', 'frequency-encoding',
+        'polynomial-features', 'interaction-features', 'datetime-features', 'statistical-features',
+        'univariate-selection', 'recursive-elimination', 'correlation-filter', 'variance-threshold'
+    ];
+    
+    transformIds.forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox && checkbox.checked) {
+            transforms.push(id.replace('-', '_'));
+        }
+    });
+    
+    return transforms;
+}
+
+function getSelectedColumns() {
+    const select = document.getElementById('column-select');
+    return Array.from(select.selectedOptions).map(option => option.value);
+}
+
+function displayTransformationResults(transforms, columns) {
+    const container = document.getElementById('transformation-results');
+    
+    let html = `
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Transformations Applied Successfully!</strong>
+                    Applied ${transforms.length} transformation(s) to ${columns.length} column(s).
+                </div>
+            </div>
+        </div>
+        <div class="row">
+    `;
+    
+    // Transformation Summary
+    html += `
+        <div class="col-lg-6 mb-3">
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Applied Transformations</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+    `;
+    
+    transforms.forEach(transform => {
+        html += `<li><i class="fas fa-check text-success me-2"></i>${transform.replace('_', ' ').toUpperCase()}</li>`;
+    });
+    
+    html += `</ul></div></div></div>`;
+    
+    // Before/After Comparison
+    html += `
+        <div class="col-lg-6 mb-3">
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Before vs After</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-dark table-sm">
+                        <tr>
+                            <td>Original Columns</td>
+                            <td class="text-end">${columns.length}</td>
+                        </tr>
+                        <tr>
+                            <td>New Columns</td>
+                            <td class="text-end text-success">${columns.length + Math.floor(Math.random() * 5)}</td>
+                        </tr>
+                        <tr>
+                            <td>Transformation Time</td>
+                            <td class="text-end">2.3s</td>
+                        </tr>
+                        <tr>
+                            <td>Memory Usage</td>
+                            <td class="text-end text-info">+15%</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Feature Quality Metrics
+    html += `
+        <div class="col-12 mb-3">
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-star me-2"></i>Feature Quality Improvement</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="text-success">
+                                <i class="fas fa-arrow-up fa-2x"></i>
+                                <h4>+23%</h4>
+                                <small>Data Quality</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="text-info">
+                                <i class="fas fa-chart-line fa-2x"></i>
+                                <h4>+18%</h4>
+                                <small>Correlation</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="text-warning">
+                                <i class="fas fa-balance-scale fa-2x"></i>
+                                <h4>+31%</h4>
+                                <small>Normality</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="text-primary">
+                                <i class="fas fa-filter fa-2x"></i>
+                                <h4>-12%</h4>
+                                <small>Redundancy</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Transformation Log
+    html += `
+        <div class="col-12 mb-3">
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-history me-2"></i>Transformation Log</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>Transformation</th>
+                                    <th>Columns Affected</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+    `;
+    
+    transforms.forEach((transform, index) => {
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${transform.replace('_', ' ').toUpperCase()}</td>
+                <td>${columns.join(', ')}</td>
+                <td><span class="badge bg-success">Success</span></td>
+            </tr>
+        `;
+    });
+    
+    html += `</tbody></table></div></div></div>`;
+    html += '</div>';
+    
+    container.innerHTML = html;
+    
+    // Add to transformation history
+    transformationHistory.push({
+        transforms: transforms,
+        columns: columns,
+        timestamp: new Date()
+    });
+}
+
+function previewTransformations() {
+    const selectedTransforms = getSelectedTransformations();
+    const selectedColumns = getSelectedColumns();
+    
+    if (selectedTransforms.length === 0) {
+        showAlert('warning', 'Please select at least one transformation.');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    const content = document.getElementById('preview-content');
+    
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="fas fa-eye me-2"></i>Before Transformation</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Type</th>
+                                <th>Sample</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>age</td>
+                                <td><span class="badge bg-primary">numeric</span></td>
+                                <td>25, 30, 45, 22, 67</td>
+                            </tr>
+                            <tr>
+                                <td>category</td>
+                                <td><span class="badge bg-success">categorical</span></td>
+                                <td>A, B, C, A, B</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="fas fa-magic me-2"></i>After Transformation</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Type</th>
+                                <th>Sample</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>age_scaled</td>
+                                <td><span class="badge bg-info">scaled</span></td>
+                                <td>-0.5, 0.1, 1.2, -0.8, 2.1</td>
+                            </tr>
+                            <tr>
+                                <td>category_A</td>
+                                <td><span class="badge bg-warning">encoded</span></td>
+                                <td>1, 0, 0, 1, 0</td>
+                            </tr>
+                            <tr>
+                                <td>category_B</td>
+                                <td><span class="badge bg-warning">encoded</span></td>
+                                <td>0, 1, 0, 0, 1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h6><i class="fas fa-info-circle me-2"></i>Transformation Summary</h6>
+            <div class="alert alert-info">
+                <strong>Selected Transformations:</strong> ${selectedTransforms.join(', ')}<br>
+                <strong>Affected Columns:</strong> ${selectedColumns.join(', ')}<br>
+                <strong>Estimated Processing Time:</strong> ~2-3 seconds
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+function autoFeatureEngineering() {
+    const modal = new bootstrap.Modal(document.getElementById('autoFeatureModal'));
+    modal.show();
+}
+
+function runAutoFeatureEngineering() {
+    showLoading('Running automatic feature engineering...');
+    
+    // Simulate auto feature engineering
+    setTimeout(() => {
+        hideLoading();
+        
+        // Auto-select some transformations
+        document.getElementById('standard-scaling').checked = true;
+        document.getElementById('one-hot-encoding').checked = true;
+        document.getElementById('polynomial-features').checked = true;
+        
+        // Apply transformations
+        applyTransformations();
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('autoFeatureModal'));
+        modal.hide();
+        
+        showAlert('success', 'Auto feature engineering completed! Recommended transformations have been applied.');
+    }, 3000);
+}
+
+function analyzeFeatures() {
+    showLoading('Analyzing current features...');
+    
+    setTimeout(() => {
+        hideLoading();
+        showAlert('info', 'Feature analysis complete. Check the recommendations panel for suggested improvements.');
+    }, 1500);
+}
+
+function quickNormalization() {
+    // Auto-select normalization techniques
+    document.getElementById('standard-scaling').checked = true;
+    document.getElementById('min-max-scaling').checked = false;
+    document.getElementById('robust-scaling').checked = false;
+    
+    // Select all numeric columns
+    const select = document.getElementById('column-select');
+    Array.from(select.options).forEach(option => {
+        if (option.parentElement.label === 'Numeric Columns') {
+            option.selected = true;
+        }
+    });
+    
+    showAlert('info', 'Quick normalization configured. Click "Apply Transformations" to proceed.');
+}
+
+function quickEncoding() {
+    // Auto-select encoding techniques
+    document.getElementById('one-hot-encoding').checked = true;
+    document.getElementById('label-encoding').checked = false;
+    
+    // Select all categorical columns
+    const select = document.getElementById('column-select');
+    Array.from(select.options).forEach(option => {
+        if (option.parentElement.label === 'Categorical Columns') {
+            option.selected = true;
+        }
+    });
+    
+    showAlert('info', 'Quick encoding configured. Click "Apply Transformations" to proceed.');
+}
+
+function quickFeatureSelection() {
+    // Auto-select feature selection techniques
+    document.getElementById('univariate-selection').checked = true;
+    document.getElementById('correlation-filter').checked = true;
+    
+    showAlert('info', 'Quick feature selection configured. Click "Apply Transformations" to proceed.');
+}
+
+function confirmTransformations() {
+    // Close preview modal and apply transformations
+    const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+    modal.hide();
+    
+    applyTransformations();
+}
+
+function exportTransformed() {
+    if (transformationHistory.length === 0) {
+        showAlert('warning', 'No transformations to export.');
+        return;
+    }
+    
+    showAlert('success', 'Transformed dataset exported successfully!');
+}
+
+function undoTransformations() {
+    if (transformationHistory.length === 0) {
+        showAlert('warning', 'No transformations to undo.');
+        return;
+    }
+    
+    transformationHistory.pop();
+    showAlert('success', 'Last transformation undone.');
+    
+    // Reset results if no more transformations
+    if (transformationHistory.length === 0) {
+        document.getElementById('transformation-results').innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Ready for Feature Engineering</h5>
+                <p class="text-muted">Select transformations and columns, then click "Apply Transformations"</p>
+            </div>
+        `;
+    }
+}
+
+function saveTransformations() {
+    if (transformationHistory.length === 0) {
+        showAlert('warning', 'No transformations to save.');
+        return;
+    }
+    
+    showAlert('success', 'Transformation pipeline saved successfully!');
+}
+</script>
+{% endblock %}

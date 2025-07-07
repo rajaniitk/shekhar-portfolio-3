@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Dataset - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card bg-dark border-primary shadow-lg">
+            <div class="card-header bg-primary">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-upload me-2"></i>Upload Dataset
+                </h4>
+                <p class="mb-0 opacity-75">Upload your data files for analysis</p>
+            </div>
+            <div class="card-body">
+                <!-- Upload Form -->
+                <form id="upload-form" action="{{ url_for('upload.upload_file') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Select Data File</label>
+                        <div class="upload-area border border-2 border-dashed border-primary rounded p-5 text-center" 
+                             ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                            <h5>Drag & Drop your file here</h5>
+                            <p class="text-muted mb-3">or click to browse</p>
+                            <input type="file" class="form-control" id="file" name="file" 
+                                   accept=".csv,.xlsx,.json,.parquet" required style="display: none;">
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file').click()">
+                                <i class="fas fa-folder-open me-2"></i>Browse Files
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Supported formats: CSV, Excel (.xlsx), JSON, Parquet (Max size: 500MB)
+                        </div>
+                    </div>
+
+                    <!-- File Preview -->
+                    <div id="file-preview" class="mb-4 d-none">
+                        <div class="card bg-secondary">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-file-alt me-2"></i>Selected File
+                                </h6>
+                                <div id="file-info"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Options -->
+                    <div class="mb-4">
+                        <h6><i class="fas fa-cog me-2"></i>Upload Options</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="handle-missing" checked>
+                                    <label class="form-check-label" for="handle-missing">
+                                        Auto-handle missing values
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="detect-outliers" checked>
+                                    <label class="form-check-label" for="detect-outliers">
+                                        Detect outliers
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="generate-report" checked>
+                                    <label class="form-check-label" for="generate-report">
+                                        Generate initial EDA report
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="encode-categorical">
+                                    <label class="form-check-label" for="encode-categorical">
+                                        Auto-encode categorical variables
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="normalize-numeric">
+                                    <label class="form-check-label" for="normalize-numeric">
+                                        Normalize numeric columns
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="create-backup" checked>
+                                    <label class="form-check-label" for="create-backup">
+                                        Create backup copy
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="upload-btn">
+                            <i class="fas fa-upload me-2"></i>Upload & Analyze
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div id="upload-progress" class="card bg-dark border-success mt-4 d-none">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Uploading & Processing...
+                </h6>
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%" id="progress-bar"></div>
+                </div>
+                <div id="progress-text">Preparing file...</div>
+            </div>
+        </div>
+
+        <!-- Supported Formats Info -->
+        <div class="card bg-dark border-info mt-4">
+            <div class="card-header bg-info">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Supported File Formats
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-file-csv text-success me-2"></i>CSV Files</h6>
+                        <ul class="text-muted">
+                            <li>Comma-separated values</li>
+                            <li>UTF-8 encoding recommended</li>
+                            <li>First row as headers</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-file-excel text-success me-2"></i>Excel Files</h6>
+                        <ul class="text-muted">
+                            <li>.xlsx format supported</li>
+                            <li>First sheet will be used</li>
+                            <li>Headers in first row</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-file-code text-warning me-2"></i>JSON Files</h6>
+                        <ul class="text-muted">
+                            <li>Structured JSON data</li>
+                            <li>Array of objects format</li>
+                            <li>Flat structure preferred</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-file text-info me-2"></i>Parquet Files</h6>
+                        <ul class="text-muted">
+                            <li>Columnar storage format</li>
+                            <li>Efficient for large datasets</li>
+                            <li>Preserves data types</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedFile = null;
+
+document.getElementById('file').addEventListener('change', function(e) {
+    handleFileSelect(e.target.files[0]);
+});
+
+document.getElementById('upload-form').addEventListener('submit', function(e) {
+    if (!selectedFile) {
+        e.preventDefault();
+        showAlert('warning', 'Please select a file to upload.');
+        return;
+    }
+    
+    showUploadProgress();
+});
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const uploadArea = e.target.closest('.upload-area');
+    uploadArea.classList.remove('border-warning');
+    uploadArea.classList.add('border-primary');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFileSelect(files[0]);
+    }
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const uploadArea = e.target.closest('.upload-area');
+    uploadArea.classList.remove('border-primary');
+    uploadArea.classList.add('border-warning');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const uploadArea = e.target.closest('.upload-area');
+    uploadArea.classList.remove('border-warning');
+    uploadArea.classList.add('border-primary');
+}
+
+function handleFileSelect(file) {
+    if (!file) return;
+    
+    // Validate file type
+    const allowedTypes = ['.csv', '.xlsx', '.json', '.parquet'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+        showAlert('danger', 'Unsupported file format. Please select a CSV, Excel, JSON, or Parquet file.');
+        return;
+    }
+    
+    // Validate file size (500MB limit)
+    const maxSize = 500 * 1024 * 1024; // 500MB
+    if (file.size > maxSize) {
+        showAlert('danger', 'File size exceeds 500MB limit. Please select a smaller file.');
+        return;
+    }
+    
+    selectedFile = file;
+    
+    // Update file input
+    const fileInput = document.getElementById('file');
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    
+    // Show file preview
+    showFilePreview(file);
+}
+
+function showFilePreview(file) {
+    const preview = document.getElementById('file-preview');
+    const fileInfo = document.getElementById('file-info');
+    
+    const fileSize = formatFileSize(file.size);
+    const fileType = file.type || 'Unknown';
+    
+    fileInfo.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <strong>File Name:</strong> ${file.name}<br>
+                <strong>File Size:</strong> ${fileSize}<br>
+                <strong>File Type:</strong> ${fileType}
+            </div>
+            <div class="col-md-6">
+                <strong>Last Modified:</strong> ${new Date(file.lastModified).toLocaleString()}<br>
+                <strong>Status:</strong> <span class="badge bg-success">Ready to upload</span>
+            </div>
+        </div>
+    `;
+    
+    preview.classList.remove('d-none');
+}
+
+function showUploadProgress() {
+    document.getElementById('upload-progress').classList.remove('d-none');
+    
+    // Simulate progress
+    let progress = 0;
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) progress = 100;
+        
+        progressBar.style.width = progress + '%';
+        
+        if (progress < 30) {
+            progressText.textContent = 'Uploading file...';
+        } else if (progress < 60) {
+            progressText.textContent = 'Processing data...';
+        } else if (progress < 90) {
+            progressText.textContent = 'Analyzing structure...';
+        } else {
+            progressText.textContent = 'Finalizing...';
+        }
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            progressText.textContent = 'Upload complete! Redirecting...';
+        }
+    }, 200);
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+</script>
+{% endblock %}

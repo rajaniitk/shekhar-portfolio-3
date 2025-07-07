@@ -1,0 +1,807 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Export - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Report Configuration Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card bg-dark border-primary sticky-top">
+            <div class="card-header bg-primary">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2"></i>Report Configuration
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Dataset Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Select Dataset</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="dataset-select">
+                        <option value="">Choose dataset...</option>
+                        {% if datasets %}
+                            {% for dataset in datasets %}
+                                <option value="{{ dataset.id }}">{{ dataset.filename }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- Report Type -->
+                <div class="mb-3">
+                    <label class="form-label">Report Type</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="report-type">
+                        <option value="comprehensive">Comprehensive EDA Report</option>
+                        <option value="statistical">Statistical Analysis Report</option>
+                        <option value="ml">Machine Learning Report</option>
+                        <option value="comparison">Comparison Report</option>
+                        <option value="custom">Custom Report</option>
+                    </select>
+                </div>
+
+                <!-- Report Sections -->
+                <div class="mb-3">
+                    <label class="form-label">Include Sections</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-overview" checked>
+                        <label class="form-check-label" for="section-overview">
+                            Dataset Overview
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-statistics" checked>
+                        <label class="form-check-label" for="section-statistics">
+                            Descriptive Statistics
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-visualizations" checked>
+                        <label class="form-check-label" for="section-visualizations">
+                            Visualizations
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-correlations" checked>
+                        <label class="form-check-label" for="section-correlations">
+                            Correlation Analysis
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-tests">
+                        <label class="form-check-label" for="section-tests">
+                            Statistical Tests
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-models">
+                        <label class="form-check-label" for="section-models">
+                            ML Model Results
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-insights" checked>
+                        <label class="form-check-label" for="section-insights">
+                            AI Insights
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="section-recommendations" checked>
+                        <label class="form-check-label" for="section-recommendations">
+                            Recommendations
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Export Format -->
+                <div class="mb-3">
+                    <label class="form-label">Export Format</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="export-format">
+                        <option value="pdf">PDF Report</option>
+                        <option value="html">HTML Report</option>
+                        <option value="docx">Word Document</option>
+                        <option value="jupyter">Jupyter Notebook</option>
+                        <option value="json">JSON Data</option>
+                    </select>
+                </div>
+
+                <!-- Report Options -->
+                <div class="mb-3">
+                    <label class="form-label">Options</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="include-raw-data">
+                        <label class="form-check-label" for="include-raw-data">
+                            Include Raw Data
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="high-quality-charts" checked>
+                        <label class="form-check-label" for="high-quality-charts">
+                            High-Quality Charts
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="detailed-explanations" checked>
+                        <label class="form-check-label" for="detailed-explanations">
+                            Detailed Explanations
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="executive-summary" checked>
+                        <label class="form-check-label" for="executive-summary">
+                            Executive Summary
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Template Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Report Template</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="report-template">
+                        <option value="modern">Modern Dark Theme</option>
+                        <option value="classic">Classic Professional</option>
+                        <option value="minimal">Minimal Clean</option>
+                        <option value="corporate">Corporate Style</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="generateReport()">
+                        <i class="fas fa-file-alt me-1"></i>Generate Report
+                    </button>
+                    <button class="btn btn-outline-success" onclick="previewReport()">
+                        <i class="fas fa-eye me-1"></i>Preview Report
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="scheduleReport()">
+                        <i class="fas fa-clock me-1"></i>Schedule Report
+                    </button>
+                    <button class="btn btn-outline-info" onclick="saveTemplate()">
+                        <i class="fas fa-save me-1"></i>Save Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Generation Area -->
+    <div class="col-lg-9">
+        <!-- Recent Reports -->
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header bg-secondary">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-history me-2"></i>Recent Reports
+                        </h6>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-light btn-sm" onclick="refreshReports()">
+                            <i class="fas fa-sync me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Report Name</th>
+                                <th>Dataset</th>
+                                <th>Type</th>
+                                <th>Format</th>
+                                <th>Created</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-table">
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                                    Comprehensive_EDA_Sales_2023.pdf
+                                </td>
+                                <td>Sales_Data_2023.csv</td>
+                                <td><span class="badge bg-primary">Comprehensive</span></td>
+                                <td><span class="badge bg-danger">PDF</span></td>
+                                <td>2023-12-01 14:30</td>
+                                <td>2.4 MB</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-success" onclick="downloadReport('1')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" onclick="viewReport('1')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info" onclick="shareReport('1')">
+                                            <i class="fas fa-share"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteReport('1')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-code text-warning me-2"></i>
+                                    Statistical_Analysis_Customer.html
+                                </td>
+                                <td>Customer_Data.xlsx</td>
+                                <td><span class="badge bg-warning">Statistical</span></td>
+                                <td><span class="badge bg-warning">HTML</span></td>
+                                <td>2023-11-30 09:15</td>
+                                <td>1.8 MB</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-success" onclick="downloadReport('2')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" onclick="viewReport('2')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info" onclick="shareReport('2')">
+                                            <i class="fas fa-share"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteReport('2')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-word text-info me-2"></i>
+                                    ML_Model_Performance.docx
+                                </td>
+                                <td>Product_Analysis.json</td>
+                                <td><span class="badge bg-success">ML Report</span></td>
+                                <td><span class="badge bg-info">DOCX</span></td>
+                                <td>2023-11-28 16:45</td>
+                                <td>3.1 MB</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-success" onclick="downloadReport('3')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" onclick="viewReport('3')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info" onclick="shareReport('3')">
+                                            <i class="fas fa-share"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteReport('3')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Generation Status -->
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>Report Generation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="report-generation-area">
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Ready to Generate Reports</h5>
+                        <p class="text-muted">Configure your report settings and click "Generate Report"</p>
+                        
+                        <!-- Report Templates -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h6 class="mb-3">Quick Report Templates</h6>
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-primary h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-chart-bar fa-2x text-white mb-2"></i>
+                                                <h6 class="text-white">Basic EDA</h6>
+                                                <p class="text-white small mb-3">Quick exploratory data analysis with essential visualizations</p>
+                                                <button class="btn btn-light btn-sm" onclick="quickReport('basic-eda')">
+                                                    <i class="fas fa-bolt me-1"></i>Generate
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-success h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-calculator fa-2x text-white mb-2"></i>
+                                                <h6 class="text-white">Statistical</h6>
+                                                <p class="text-white small mb-3">Comprehensive statistical analysis with hypothesis tests</p>
+                                                <button class="btn btn-light btn-sm" onclick="quickReport('statistical')">
+                                                    <i class="fas fa-bolt me-1"></i>Generate
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-warning h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-robot fa-2x text-white mb-2"></i>
+                                                <h6 class="text-white">ML Models</h6>
+                                                <p class="text-white small mb-3">Machine learning model performance and evaluation</p>
+                                                <button class="btn btn-light btn-sm" onclick="quickReport('ml-models')">
+                                                    <i class="fas fa-bolt me-1"></i>Generate
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-info h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-magic fa-2x text-white mb-2"></i>
+                                                <h6 class="text-white">Executive</h6>
+                                                <p class="text-white small mb-3">High-level summary for business stakeholders</p>
+                                                <button class="btn btn-light btn-sm" onclick="quickReport('executive')">
+                                                    <i class="fas fa-bolt me-1"></i>Generate
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Preview Modal -->
+<div class="modal fade" id="reportPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>Report Preview
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="report-preview-content">
+                <!-- Report preview will be loaded here -->
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-primary" onclick="generateFromPreview()">
+                    <i class="fas fa-file-alt me-1"></i>Generate Full Report
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Report Modal -->
+<div class="modal fade" id="scheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-clock me-2"></i>Schedule Report Generation
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Schedule Type</label>
+                            <select class="form-select bg-dark text-light border-secondary" id="schedule-type">
+                                <option value="once">One-time</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control bg-dark text-light border-secondary" id="schedule-date">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-control bg-dark text-light border-secondary" id="schedule-time">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Email Recipients</label>
+                            <textarea class="form-control bg-dark text-light border-secondary" 
+                                      id="email-recipients" rows="3" 
+                                      placeholder="Enter email addresses, one per line"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Report Name Template</label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                   id="report-name-template" 
+                                   value="Report_{dataset}_{date}" 
+                                   placeholder="Report name template">
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="email-notification" checked>
+                            <label class="form-check-label" for="email-notification">
+                                Send email notification
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-primary" onclick="scheduleReportGeneration()">
+                    <i class="fas fa-clock me-1"></i>Schedule Report
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let reportGenerationStatus = null;
+
+function generateReport() {
+    const datasetId = document.getElementById('dataset-select').value;
+    const reportType = document.getElementById('report-type').value;
+    const exportFormat = document.getElementById('export-format').value;
+    
+    if (!datasetId) {
+        showAlert('warning', 'Please select a dataset.');
+        return;
+    }
+    
+    showLoading('Generating report... This may take a few minutes.');
+    
+    // Simulate report generation
+    simulateReportGeneration(datasetId, reportType, exportFormat);
+}
+
+function simulateReportGeneration(datasetId, reportType, exportFormat) {
+    const container = document.getElementById('report-generation-area');
+    
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-12">
+                <div class="card bg-primary">
+                    <div class="card-body">
+                        <h6 class="text-white mb-3">
+                            <i class="fas fa-cogs me-2"></i>Generating ${reportType.toUpperCase()} Report
+                        </h6>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%" id="generation-progress"></div>
+                        </div>
+                        <div class="text-white" id="generation-status">Initializing report generation...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="card bg-secondary">
+                    <div class="card-body">
+                        <h6><i class="fas fa-info-circle me-2"></i>Report Details</h6>
+                        <table class="table table-dark table-sm">
+                            <tr><td>Dataset</td><td>Dataset ${datasetId}</td></tr>
+                            <tr><td>Type</td><td>${reportType.toUpperCase()}</td></tr>
+                            <tr><td>Format</td><td>${exportFormat.toUpperCase()}</td></tr>
+                            <tr><td>Estimated Size</td><td id="estimated-size">Calculating...</td></tr>
+                            <tr><td>Estimated Time</td><td id="estimated-time">Calculating...</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-secondary">
+                    <div class="card-body">
+                        <h6><i class="fas fa-list me-2"></i>Generation Steps</h6>
+                        <ul class="list-unstyled" id="generation-steps">
+                            <li><i class="fas fa-spinner fa-spin text-primary me-2"></i>Loading dataset...</li>
+                            <li class="text-muted"><i class="fas fa-circle me-2"></i>Performing analysis...</li>
+                            <li class="text-muted"><i class="fas fa-circle me-2"></i>Generating visualizations...</li>
+                            <li class="text-muted"><i class="fas fa-circle me-2"></i>Creating report...</li>
+                            <li class="text-muted"><i class="fas fa-circle me-2"></i>Finalizing export...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Simulate progress
+    let progress = 0;
+    const progressBar = document.getElementById('generation-progress');
+    const statusText = document.getElementById('generation-status');
+    const estimatedSize = document.getElementById('estimated-size');
+    const estimatedTime = document.getElementById('estimated-time');
+    const steps = document.getElementById('generation-steps');
+    
+    const phases = [
+        { text: 'Loading and analyzing dataset...', progress: 20 },
+        { text: 'Performing statistical calculations...', progress: 40 },
+        { text: 'Generating visualizations...', progress: 60 },
+        { text: 'Creating report structure...', progress: 80 },
+        { text: 'Finalizing and exporting...', progress: 100 }
+    ];
+    
+    let currentPhase = 0;
+    
+    // Update estimated values
+    setTimeout(() => {
+        estimatedSize.textContent = '2.4 MB';
+        estimatedTime.textContent = '45 seconds';
+    }, 1000);
+    
+    const progressInterval = setInterval(() => {
+        if (currentPhase < phases.length) {
+            const phase = phases[currentPhase];
+            progress = phase.progress;
+            
+            progressBar.style.width = progress + '%';
+            statusText.textContent = phase.text;
+            
+            // Update steps
+            const stepItems = steps.children;
+            if (stepItems[currentPhase]) {
+                stepItems[currentPhase].innerHTML = `<i class="fas fa-check text-success me-2"></i>${stepItems[currentPhase].textContent.substring(2)}`;
+            }
+            if (stepItems[currentPhase + 1]) {
+                stepItems[currentPhase + 1].innerHTML = `<i class="fas fa-spinner fa-spin text-primary me-2"></i>${stepItems[currentPhase + 1].textContent.substring(2)}`;
+                stepItems[currentPhase + 1].classList.remove('text-muted');
+            }
+            
+            currentPhase++;
+        } else {
+            clearInterval(progressInterval);
+            hideLoading();
+            
+            // Show completion
+            statusText.textContent = 'Report generated successfully!';
+            showAlert('success', 'Report generated and ready for download!');
+            
+            // Add download button
+            container.innerHTML += `
+                <div class="row mt-3">
+                    <div class="col-12 text-center">
+                        <button class="btn btn-success btn-lg me-2" onclick="downloadGeneratedReport()">
+                            <i class="fas fa-download me-2"></i>Download Report
+                        </button>
+                        <button class="btn btn-outline-primary btn-lg" onclick="viewGeneratedReport()">
+                            <i class="fas fa-eye me-2"></i>View Report
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Refresh reports table
+            refreshReports();
+        }
+    }, 2000);
+}
+
+function previewReport() {
+    const datasetId = document.getElementById('dataset-select').value;
+    
+    if (!datasetId) {
+        showAlert('warning', 'Please select a dataset.');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('reportPreviewModal'));
+    const content = document.getElementById('report-preview-content');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Generating report preview...</p>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Simulate preview generation
+    setTimeout(() => {
+        content.innerHTML = generateReportPreview();
+    }, 2000);
+}
+
+function generateReportPreview() {
+    return `
+        <div class="row">
+            <div class="col-12">
+                <h4 class="mb-4">Report Preview</h4>
+                
+                <div class="card bg-secondary mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">1. Executive Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>This comprehensive analysis of the selected dataset reveals key insights about data distribution, quality, and statistical characteristics...</p>
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="text-primary">
+                                    <i class="fas fa-database fa-2x"></i>
+                                    <h5>1,500</h5>
+                                    <small>Total Records</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="text-success">
+                                    <i class="fas fa-columns fa-2x"></i>
+                                    <h5>12</h5>
+                                    <small>Features</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="text-warning">
+                                    <i class="fas fa-percentage fa-2x"></i>
+                                    <h5>96.8%</h5>
+                                    <small>Data Quality</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-secondary mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">2. Data Overview</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Column</th>
+                                        <th>Type</th>
+                                        <th>Missing %</th>
+                                        <th>Unique Values</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>age</td>
+                                        <td><span class="badge bg-primary">numeric</span></td>
+                                        <td>0.0%</td>
+                                        <td>65</td>
+                                    </tr>
+                                    <tr>
+                                        <td>income</td>
+                                        <td><span class="badge bg-primary">numeric</span></td>
+                                        <td>2.1%</td>
+                                        <td>1,234</td>
+                                    </tr>
+                                    <tr>
+                                        <td>category</td>
+                                        <td><span class="badge bg-success">categorical</span></td>
+                                        <td>0.5%</td>
+                                        <td>5</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0">3. Key Findings</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul>
+                            <li>Strong positive correlation between age and income (r = 0.73)</li>
+                            <li>Category A shows significantly higher values than other categories</li>
+                            <li>Data quality is excellent with minimal missing values</li>
+                            <li>Normal distribution observed in key numeric variables</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function scheduleReport() {
+    const modal = new bootstrap.Modal(document.getElementById('scheduleModal'));
+    
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('schedule-date').value = tomorrow.toISOString().split('T')[0];
+    
+    // Set default time to 9 AM
+    document.getElementById('schedule-time').value = '09:00';
+    
+    modal.show();
+}
+
+function scheduleReportGeneration() {
+    const scheduleType = document.getElementById('schedule-type').value;
+    const scheduleDate = document.getElementById('schedule-date').value;
+    const scheduleTime = document.getElementById('schedule-time').value;
+    
+    if (!scheduleDate || !scheduleTime) {
+        showAlert('warning', 'Please set both date and time for the scheduled report.');
+        return;
+    }
+    
+    showAlert('success', `Report scheduled successfully for ${scheduleDate} at ${scheduleTime}!`);
+    bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide();
+}
+
+function saveTemplate() {
+    showAlert('success', 'Report template saved successfully!');
+}
+
+function quickReport(templateType) {
+    // Auto-configure based on template type
+    const reportTypeSelect = document.getElementById('report-type');
+    
+    switch(templateType) {
+        case 'basic-eda':
+            reportTypeSelect.value = 'comprehensive';
+            break;
+        case 'statistical':
+            reportTypeSelect.value = 'statistical';
+            break;
+        case 'ml-models':
+            reportTypeSelect.value = 'ml';
+            break;
+        case 'executive':
+            reportTypeSelect.value = 'comprehensive';
+            break;
+    }
+    
+    showAlert('info', `${templateType} template configured. Please select a dataset and click "Generate Report".`);
+}
+
+function refreshReports() {
+    // Simulate refreshing the reports table
+    showAlert('success', 'Reports refreshed successfully!');
+}
+
+function downloadReport(reportId) {
+    showAlert('success', `Downloading report ${reportId}...`);
+}
+
+function viewReport(reportId) {
+    showAlert('info', `Opening report ${reportId} in new window...`);
+}
+
+function shareReport(reportId) {
+    showAlert('success', `Share link for report ${reportId} copied to clipboard!`);
+}
+
+function deleteReport(reportId) {
+    if (confirm('Are you sure you want to delete this report?')) {
+        showAlert('success', `Report ${reportId} deleted successfully!`);
+    }
+}
+
+function downloadGeneratedReport() {
+    showAlert('success', 'Report download started!');
+}
+
+function viewGeneratedReport() {
+    showAlert('info', 'Opening report in new window...');
+}
+
+function generateFromPreview() {
+    bootstrap.Modal.getInstance(document.getElementById('reportPreviewModal')).hide();
+    generateReport();
+}
+</script>
+{% endblock %}

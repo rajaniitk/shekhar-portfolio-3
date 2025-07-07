@@ -1,0 +1,721 @@
+{% extends "base.html" %}
+
+{% block title %}Column Analysis - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Column Selection Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card bg-dark border-primary sticky-top">
+            <div class="card-header bg-primary">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-columns me-2"></i>Select Columns
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if columns_info %}
+                    <div class="mb-3">
+                        <button class="btn btn-outline-success btn-sm w-100 mb-2" onclick="selectAllColumns()">
+                            <i class="fas fa-check-double me-1"></i>Select All
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm w-100 mb-2" onclick="clearSelection()">
+                            <i class="fas fa-times me-1"></i>Clear All
+                        </button>
+                        <button class="btn btn-primary btn-sm w-100" onclick="analyzeSelectedColumns()">
+                            <i class="fas fa-search me-1"></i>Analyze Selected
+                        </button>
+                    </div>
+                    
+                    <hr class="border-secondary">
+                    
+                    <div class="column-list" style="max-height: 400px; overflow-y: auto;">
+                        {% for column, info in columns_info.items() %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input column-checkbox" type="checkbox" 
+                                   id="col-{{ loop.index }}" value="{{ column }}">
+                            <label class="form-check-label w-100" for="col-{{ loop.index }}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="fas fa-{{ 'hashtag' if info.dtype.startswith(('int', 'float')) else 'font' }} me-1"></i>
+                                        {{ column }}
+                                    </span>
+                                    <span class="badge bg-{{ 'primary' if info.dtype.startswith(('int', 'float')) else 'success' }} ms-1">
+                                        {{ info.dtype }}
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    {{ info.unique_count }} unique, 
+                                    {{ info.missing_percentage }}% missing
+                                </small>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <p class="text-muted">No column information available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Results -->
+    <div class="col-lg-9">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-analytics me-2"></i>Column Analysis Results
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-light" onclick="exportResults()">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <button class="btn btn-outline-light" onclick="compareColumns()">
+                                <i class="fas fa-balance-scale me-1"></i>Compare
+                            </button>
+                            <button class="btn btn-outline-light" onclick="showRecommendations()">
+                                <i class="fas fa-lightbulb me-1"></i>Recommendations
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="analysis-results">
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Ready for Column Analysis</h5>
+                        <p class="text-muted">Select columns from the sidebar and click "Analyze Selected" to get detailed insights</p>
+                        
+                        <!-- Quick Start Options -->
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-primary w-100 py-3" onclick="analyzeNumericColumns()">
+                                    <i class="fas fa-hashtag fa-2x d-block mb-2"></i>
+                                    Analyze All Numeric
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-success w-100 py-3" onclick="analyzeCategoricalColumns()">
+                                    <i class="fas fa-font fa-2x d-block mb-2"></i>
+                                    Analyze All Categorical
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-warning w-100 py-3" onclick="analyzeCorrelations()">
+                                    <i class="fas fa-project-diagram fa-2x d-block mb-2"></i>
+                                    Correlation Analysis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Column Comparison Modal -->
+<div class="modal fade" id="comparisonModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-balance-scale me-2"></i>Column Comparison
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Select First Column</label>
+                        <select class="form-select bg-dark text-light border-secondary" id="compare-col1">
+                            <option value="">Choose column...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Select Second Column</label>
+                        <select class="form-select bg-dark text-light border-secondary" id="compare-col2">
+                            <option value="">Choose column...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="text-center mb-3">
+                    <button class="btn btn-primary" onclick="performComparison()">
+                        <i class="fas fa-play me-1"></i>Compare Columns
+                    </button>
+                </div>
+                <div id="comparison-results">
+                    <!-- Comparison results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommendations Modal -->
+<div class="modal fade" id="recommendationsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-lightbulb me-2"></i>Analysis Recommendations
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="recommendations-content">
+                <!-- Recommendations will be displayed here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const datasetId = {{ dataset.id if dataset else 'null' }};
+let selectedColumns = [];
+let analysisResults = {};
+
+function selectAllColumns() {
+    const checkboxes = document.querySelectorAll('.column-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateSelectedColumns();
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.column-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelectedColumns();
+}
+
+function updateSelectedColumns() {
+    const checkboxes = document.querySelectorAll('.column-checkbox:checked');
+    selectedColumns = Array.from(checkboxes).map(cb => cb.value);
+}
+
+function analyzeSelectedColumns() {
+    updateSelectedColumns();
+    
+    if (selectedColumns.length === 0) {
+        showAlert('warning', 'Please select at least one column to analyze.');
+        return;
+    }
+    
+    showLoading(`Analyzing ${selectedColumns.length} column${selectedColumns.length > 1 ? 's' : ''}...`);
+    
+    const params = new URLSearchParams();
+    selectedColumns.forEach(col => params.append('columns', col));
+    
+    fetch(`/analysis/api/column_analysis/${datasetId}?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                analysisResults = data;
+                displayColumnAnalysis(data);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error analyzing columns: ' + error.message);
+        });
+}
+
+function analyzeNumericColumns() {
+    const numericCheckboxes = document.querySelectorAll('.column-checkbox');
+    const numericColumns = [];
+    
+    numericCheckboxes.forEach(checkbox => {
+        const label = checkbox.nextElementSibling;
+        if (label.querySelector('.fa-hashtag')) {
+            checkbox.checked = true;
+            numericColumns.push(checkbox.value);
+        } else {
+            checkbox.checked = false;
+        }
+    });
+    
+    if (numericColumns.length === 0) {
+        showAlert('warning', 'No numeric columns found in the dataset.');
+        return;
+    }
+    
+    analyzeSelectedColumns();
+}
+
+function analyzeCategoricalColumns() {
+    const categoricalCheckboxes = document.querySelectorAll('.column-checkbox');
+    const categoricalColumns = [];
+    
+    categoricalCheckboxes.forEach(checkbox => {
+        const label = checkbox.nextElementSibling;
+        if (label.querySelector('.fa-font')) {
+            checkbox.checked = true;
+            categoricalColumns.push(checkbox.value);
+        } else {
+            checkbox.checked = false;
+        }
+    });
+    
+    if (categoricalColumns.length === 0) {
+        showAlert('warning', 'No categorical columns found in the dataset.');
+        return;
+    }
+    
+    analyzeSelectedColumns();
+}
+
+function analyzeCorrelations() {
+    // Select only numeric columns for correlation analysis
+    analyzeNumericColumns();
+}
+
+function displayColumnAnalysis(data) {
+    const container = document.getElementById('analysis-results');
+    let html = '';
+    
+    Object.keys(data).forEach(column => {
+        const analysis = data[column].analysis;
+        const insights = data[column].insights;
+        
+        html += `
+            <div class="accordion mb-3" id="accordion-${column.replace(/[^a-zA-Z0-9]/g, '')}">
+                <div class="accordion-item bg-dark border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-secondary text-light border-0" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#collapse-${column.replace(/[^a-zA-Z0-9]/g, '')}">
+                            <i class="fas fa-${analysis.basic_info.data_type.includes('int') || analysis.basic_info.data_type.includes('float') ? 'hashtag' : 'font'} me-2"></i>
+                            <strong>${column}</strong>
+                            <span class="badge bg-primary ms-2">${analysis.basic_info.data_type}</span>
+                            <span class="ms-auto text-muted">
+                                ${analysis.basic_info.null_percentage.toFixed(1)}% missing
+                            </span>
+                        </button>
+                    </h2>
+                    <div id="collapse-${column.replace(/[^a-zA-Z0-9]/g, '')}" class="accordion-collapse collapse" 
+                         data-bs-parent="#accordion-${column.replace(/[^a-zA-Z0-9]/g, '')}">
+                        <div class="accordion-body">
+                            ${generateColumnAnalysisContent(column, analysis, insights)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function generateColumnAnalysisContent(column, analysis, insights) {
+    let content = '<div class="row">';
+    
+    // Basic Information
+    content += `
+        <div class="col-md-6 mb-3">
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-dark table-sm">
+                        <tr><td>Data Type</td><td>${analysis.basic_info.data_type}</td></tr>
+                        <tr><td>Total Count</td><td>${analysis.basic_info.total_count.toLocaleString()}</td></tr>
+                        <tr><td>Non-Null Count</td><td>${analysis.basic_info.non_null_count.toLocaleString()}</td></tr>
+                        <tr><td>Null Count</td><td>${analysis.basic_info.null_count.toLocaleString()}</td></tr>
+                        <tr><td>Null Percentage</td><td class="text-${analysis.basic_info.null_percentage > 20 ? 'danger' : analysis.basic_info.null_percentage > 10 ? 'warning' : 'success'}">${analysis.basic_info.null_percentage.toFixed(1)}%</td></tr>
+                        <tr><td>Unique Count</td><td>${analysis.basic_info.unique_count.toLocaleString()}</td></tr>
+                        <tr><td>Unique Percentage</td><td>${analysis.basic_info.unique_percentage.toFixed(1)}%</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Numeric Statistics
+    if (analysis.numeric_stats) {
+        content += `
+            <div class="col-md-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Numeric Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-dark table-sm">
+                            <tr><td>Mean</td><td>${analysis.numeric_stats.mean.toFixed(3)}</td></tr>
+                            <tr><td>Median</td><td>${analysis.numeric_stats.median.toFixed(3)}</td></tr>
+                            <tr><td>Standard Deviation</td><td>${analysis.numeric_stats.std.toFixed(3)}</td></tr>
+                            <tr><td>Minimum</td><td>${analysis.numeric_stats.min.toFixed(3)}</td></tr>
+                            <tr><td>Maximum</td><td>${analysis.numeric_stats.max.toFixed(3)}</td></tr>
+                            <tr><td>Range</td><td>${analysis.numeric_stats.range.toFixed(3)}</td></tr>
+                            <tr><td>Q1 (25%)</td><td>${analysis.numeric_stats.q25.toFixed(3)}</td></tr>
+                            <tr><td>Q3 (75%)</td><td>${analysis.numeric_stats.q75.toFixed(3)}</td></tr>
+                            <tr><td>IQR</td><td>${analysis.numeric_stats.iqr.toFixed(3)}</td></tr>
+                            <tr><td>Skewness</td><td class="text-${Math.abs(analysis.numeric_stats.skewness) > 1 ? 'warning' : 'success'}">${analysis.numeric_stats.skewness.toFixed(3)}</td></tr>
+                            <tr><td>Kurtosis</td><td>${analysis.numeric_stats.kurtosis.toFixed(3)}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Outlier Information
+        if (analysis.outliers) {
+            content += `
+                <div class="col-md-6 mb-3">
+                    <div class="card bg-secondary">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Outlier Analysis</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-dark table-sm">
+                                <tr><td>Outlier Count</td><td class="text-${analysis.outliers.percentage > 5 ? 'warning' : 'success'}">${analysis.outliers.count}</td></tr>
+                                <tr><td>Outlier Percentage</td><td class="text-${analysis.outliers.percentage > 5 ? 'warning' : 'success'}">${analysis.outliers.percentage.toFixed(1)}%</td></tr>
+                                <tr><td>Lower Bound</td><td>${analysis.outliers.lower_bound.toFixed(3)}</td></tr>
+                                <tr><td>Upper Bound</td><td>${analysis.outliers.upper_bound.toFixed(3)}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Categorical Statistics
+    if (analysis.categorical_stats) {
+        content += `
+            <div class="col-md-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Categorical Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-dark table-sm">
+                            <tr><td>Most Frequent</td><td>${analysis.categorical_stats.most_frequent || 'N/A'}</td></tr>
+                            <tr><td>Most Frequent Count</td><td>${analysis.categorical_stats.most_frequent_count.toLocaleString()}</td></tr>
+                            <tr><td>Least Frequent</td><td>${analysis.categorical_stats.least_frequent || 'N/A'}</td></tr>
+                            <tr><td>Least Frequent Count</td><td>${analysis.categorical_stats.least_frequent_count.toLocaleString()}</td></tr>
+                            <tr><td>Cardinality</td><td class="text-${analysis.categorical_stats.cardinality > 50 ? 'warning' : 'success'}">${analysis.categorical_stats.cardinality}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Text Statistics
+    if (analysis.text_stats) {
+        content += `
+            <div class="col-md-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-font me-2"></i>Text Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-dark table-sm">
+                            <tr><td>Average Length</td><td>${analysis.text_stats.avg_length.toFixed(1)}</td></tr>
+                            <tr><td>Min Length</td><td>${analysis.text_stats.min_length}</td></tr>
+                            <tr><td>Max Length</td><td>${analysis.text_stats.max_length}</td></tr>
+                            <tr><td>Total Characters</td><td>${analysis.text_stats.total_characters.toLocaleString()}</td></tr>
+                            <tr><td>Contains Numbers</td><td>${analysis.text_stats.contains_numbers}</td></tr>
+                            <tr><td>Contains Special Chars</td><td>${analysis.text_stats.contains_special_chars}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Insights
+    if (insights && insights.insights) {
+        content += `
+            <div class="col-12 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>AI Insights</h6>
+                    </div>
+                    <div class="card-body">
+        `;
+        
+        insights.insights.forEach(insight => {
+            const alertClass = insight.severity === 'critical' ? 'danger' : 
+                             insight.severity === 'warning' ? 'warning' : 'info';
+            const iconClass = insight.severity === 'critical' ? 'fa-exclamation-triangle' :
+                            insight.severity === 'warning' ? 'fa-exclamation-circle' : 'fa-info-circle';
+            
+            content += `
+                <div class="alert alert-${alertClass} border-${alertClass} mb-2">
+                    <i class="fas ${iconClass} me-2"></i>
+                    <strong>${insight.type.replace(/_/g, ' ').toUpperCase()}:</strong> ${insight.message}
+                    ${insight.recommendation ? `<br><small><strong>Recommendation:</strong> ${insight.recommendation}</small>` : ''}
+                </div>
+            `;
+        });
+        
+        content += '</div></div></div>';
+    }
+    
+    content += '</div>';
+    return content;
+}
+
+function compareColumns() {
+    // Populate column options
+    const col1Select = document.getElementById('compare-col1');
+    const col2Select = document.getElementById('compare-col2');
+    
+    col1Select.innerHTML = '<option value="">Choose column...</option>';
+    col2Select.innerHTML = '<option value="">Choose column...</option>';
+    
+    {% if columns_info %}
+        {% for column in columns_info.keys() %}
+            col1Select.innerHTML += '<option value="{{ column }}">{{ column }}</option>';
+            col2Select.innerHTML += '<option value="{{ column }}">{{ column }}</option>';
+        {% endfor %}
+    {% endif %}
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('comparisonModal'));
+    modal.show();
+}
+
+function performComparison() {
+    const col1 = document.getElementById('compare-col1').value;
+    const col2 = document.getElementById('compare-col2').value;
+    
+    if (!col1 || !col2) {
+        showAlert('warning', 'Please select both columns to compare.');
+        return;
+    }
+    
+    if (col1 === col2) {
+        showAlert('warning', 'Please select different columns to compare.');
+        return;
+    }
+    
+    showLoading('Comparing columns...');
+    
+    fetch(`/visualization/api/comparison/${datasetId}?col1=${col1}&col2=${col2}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                displayComparisonResults(data, col1, col2);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error comparing columns: ' + error.message);
+        });
+}
+
+function displayComparisonResults(data, col1, col2) {
+    const container = document.getElementById('comparison-results');
+    
+    let html = `<h6>Comparison: ${col1} vs ${col2}</h6><div class="row">`;
+    
+    Object.keys(data).forEach(vizType => {
+        if (typeof data[vizType] === 'string') {
+            html += `
+                <div class="col-12 mb-3">
+                    <div class="card bg-dark">
+                        <div class="card-header">
+                            <h6 class="mb-0">${vizType.replace(/_/g, ' ').toUpperCase()}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="comparison-plot-${vizType}" class="plot-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Render plots
+    Object.keys(data).forEach(vizType => {
+        if (typeof data[vizType] === 'string') {
+            try {
+                const plotData = JSON.parse(data[vizType]);
+                Plotly.newPlot(`comparison-plot-${vizType}`, plotData.data, plotData.layout, {responsive: true});
+            } catch (e) {
+                console.error('Error rendering comparison plot:', e);
+            }
+        }
+    });
+}
+
+function showRecommendations() {
+    const modal = new bootstrap.Modal(document.getElementById('recommendationsModal'));
+    const content = document.getElementById('recommendations-content');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Generating recommendations...</p>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Generate recommendations based on analysis results
+    if (Object.keys(analysisResults).length > 0) {
+        generateRecommendations();
+    } else {
+        content.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Please perform column analysis first to get recommendations.
+            </div>
+        `;
+    }
+}
+
+function generateRecommendations() {
+    const content = document.getElementById('recommendations-content');
+    let recommendations = [];
+    
+    Object.keys(analysisResults).forEach(column => {
+        const analysis = analysisResults[column].analysis;
+        
+        // Missing data recommendations
+        if (analysis.basic_info.null_percentage > 20) {
+            recommendations.push({
+                type: 'Data Quality',
+                priority: 'High',
+                column: column,
+                message: `High missing data (${analysis.basic_info.null_percentage.toFixed(1)}%)`,
+                action: 'Consider advanced imputation or column removal'
+            });
+        }
+        
+        // Outlier recommendations
+        if (analysis.outliers && analysis.outliers.percentage > 5) {
+            recommendations.push({
+                type: 'Outliers',
+                priority: 'Medium',
+                column: column,
+                message: `High outlier percentage (${analysis.outliers.percentage.toFixed(1)}%)`,
+                action: 'Consider outlier treatment or robust scaling'
+            });
+        }
+        
+        // Skewness recommendations
+        if (analysis.numeric_stats && Math.abs(analysis.numeric_stats.skewness) > 1) {
+            recommendations.push({
+                type: 'Distribution',
+                priority: 'Medium',
+                column: column,
+                message: `Highly skewed distribution (${analysis.numeric_stats.skewness.toFixed(2)})`,
+                action: 'Consider log transformation or Box-Cox transformation'
+            });
+        }
+        
+        // High cardinality recommendations
+        if (analysis.categorical_stats && analysis.categorical_stats.cardinality > 50) {
+            recommendations.push({
+                type: 'Encoding',
+                priority: 'Medium',
+                column: column,
+                message: `High cardinality (${analysis.categorical_stats.cardinality} unique values)`,
+                action: 'Consider target encoding or frequency encoding'
+            });
+        }
+    });
+    
+    let html = '';
+    
+    if (recommendations.length > 0) {
+        const priorities = ['High', 'Medium', 'Low'];
+        
+        priorities.forEach(priority => {
+            const priorityRecs = recommendations.filter(r => r.priority === priority);
+            if (priorityRecs.length > 0) {
+                html += `
+                    <h6 class="text-${priority === 'High' ? 'danger' : priority === 'Medium' ? 'warning' : 'info'}">
+                        <i class="fas fa-${priority === 'High' ? 'exclamation-triangle' : priority === 'Medium' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                        ${priority} Priority
+                    </h6>
+                `;
+                
+                priorityRecs.forEach(rec => {
+                    html += `
+                        <div class="alert alert-${priority === 'High' ? 'danger' : priority === 'Medium' ? 'warning' : 'info'} border-start border-5 mb-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>${rec.type} - ${rec.column}</strong><br>
+                                    ${rec.message}<br>
+                                    <small><strong>Action:</strong> ${rec.action}</small>
+                                </div>
+                                <span class="badge bg-${priority === 'High' ? 'danger' : priority === 'Medium' ? 'warning' : 'info'}">${rec.priority}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        });
+    } else {
+        html = `
+            <div class="alert alert-success text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h5>Great! No major issues found.</h5>
+                <p class="mb-0">Your data appears to be in good shape for analysis.</p>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = html;
+}
+
+function exportResults() {
+    if (Object.keys(analysisResults).length === 0) {
+        showAlert('warning', 'No analysis results to export. Please analyze columns first.');
+        return;
+    }
+    
+    // Create downloadable report
+    const reportData = {
+        dataset_id: datasetId,
+        analysis_date: new Date().toISOString(),
+        columns_analyzed: Object.keys(analysisResults),
+        results: analysisResults
+    };
+    
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `column_analysis_${datasetId}_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showAlert('success', 'Analysis results exported successfully.');
+}
+
+// Add event listeners for column selection
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.column-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedColumns);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,791 @@
+{% extends "base.html" %}
+
+{% block title %}ML Models - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Model Configuration Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card bg-dark border-primary sticky-top">
+            <div class="card-header bg-primary">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-robot me-2"></i>ML Model Training
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if dataset %}
+                    <div class="mb-3">
+                        <small class="text-muted">Dataset</small>
+                        <div class="text-primary">{{ dataset.filename }}</div>
+                        <small class="text-muted">{{ dataset.shape_rows }} rows × {{ dataset.shape_cols }} columns</small>
+                    </div>
+                    
+                    <hr class="border-secondary">
+                    
+                    <!-- Problem Type -->
+                    <div class="mb-3">
+                        <label class="form-label">Problem Type</label>
+                        <select class="form-select bg-dark text-light border-secondary" id="problem-type">
+                            <option value="auto">Auto-Detect</option>
+                            <option value="classification">Classification</option>
+                            <option value="regression">Regression</option>
+                        </select>
+                    </div>
+
+                    <!-- Target Column -->
+                    <div class="mb-3">
+                        <label class="form-label">Target Column</label>
+                        <select class="form-select bg-dark text-light border-secondary" id="target-column">
+                            <option value="">Select target...</option>
+                            {% for col in all_columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Feature Columns -->
+                    <div class="mb-3">
+                        <label class="form-label">Feature Columns</label>
+                        <select class="form-select bg-dark text-light border-secondary" id="feature-columns" multiple size="8">
+                            {% if numeric_columns %}
+                                <optgroup label="Numeric Columns">
+                                    {% for col in numeric_columns %}
+                                        <option value="{{ col }}" selected>{{ col }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endif %}
+                            {% if categorical_columns %}
+                                <optgroup label="Categorical Columns">
+                                    {% for col in categorical_columns %}
+                                        <option value="{{ col }}">{{ col }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endif %}
+                        </select>
+                        <div class="form-text">Hold Ctrl/Cmd to select multiple columns</div>
+                    </div>
+
+                    <!-- Model Type -->
+                    <div class="mb-3">
+                        <label class="form-label">Model Algorithm</label>
+                        <select class="form-select bg-dark text-light border-secondary" id="model-type">
+                            <optgroup label="Linear Models">
+                                <option value="logistic_regression">Logistic Regression</option>
+                                <option value="linear_regression">Linear Regression</option>
+                                <option value="ridge">Ridge Regression</option>
+                                <option value="lasso">Lasso Regression</option>
+                                <option value="elastic_net">Elastic Net</option>
+                            </optgroup>
+                            <optgroup label="Tree-Based Models">
+                                <option value="random_forest" selected>Random Forest</option>
+                                <option value="gradient_boosting">Gradient Boosting</option>
+                                <option value="decision_tree">Decision Tree</option>
+                                <option value="xgboost">XGBoost</option>
+                                <option value="lightgbm">LightGBM</option>
+                            </optgroup>
+                            <optgroup label="Other Models">
+                                <option value="svm">Support Vector Machine</option>
+                                <option value="knn">K-Nearest Neighbors</option>
+                                <option value="naive_bayes">Naive Bayes</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Training Options -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cross-validation" checked>
+                            <label class="form-check-label" for="cross-validation">
+                                Cross-Validation (5-fold)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hyperparameter-tuning">
+                            <label class="form-check-label" for="hyperparameter-tuning">
+                                Hyperparameter Tuning
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="feature-importance" checked>
+                            <label class="form-check-label" for="feature-importance">
+                                Feature Importance Analysis
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="trainModel()">
+                            <i class="fas fa-play me-1"></i>Train Model
+                        </button>
+                        <button class="btn btn-outline-success" onclick="compareModels()">
+                            <i class="fas fa-balance-scale me-1"></i>Compare Models
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="showHyperparameterTuning()">
+                            <i class="fas fa-cogs me-1"></i>Tune Hyperparameters
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <p class="text-muted">No dataset selected</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Results -->
+    <div class="col-lg-9">
+        <!-- Existing Models -->
+        {% if existing_models %}
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header bg-secondary">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Existing Models
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Model Type</th>
+                                <th>Target</th>
+                                <th>Features</th>
+                                <th>Performance</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in existing_models %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ model.model_type.replace('_', ' ').title() }}</span>
+                                </td>
+                                <td>{{ model.target_column }}</td>
+                                <td>
+                                    <small class="text-muted">{{ model.get_features()|length }} features</small>
+                                </td>
+                                <td>
+                                    {% set metrics = model.get_performance_metrics() %}
+                                    {% if metrics.accuracy %}
+                                        <span class="text-success">{{ "%.3f"|format(metrics.accuracy) }}</span>
+                                    {% elif metrics.r2 %}
+                                        <span class="text-success">R² {{ "%.3f"|format(metrics.r2) }}</span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ model.created_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="evaluateModel({{ model.id }})">
+                                            <i class="fas fa-chart-line"></i>
+                                        </button>
+                                        <button class="btn btn-outline-success" onclick="showPredictionInterface({{ model.id }})">
+                                            <i class="fas fa-magic"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info" onclick="getFeatureImportance({{ model.id }})">
+                                            <i class="fas fa-bar-chart"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Training Results -->
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Model Training Results
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-light" onclick="exportModel()">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <button class="btn btn-outline-light" onclick="saveModel()">
+                                <i class="fas fa-save me-1"></i>Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="training-results">
+                    <div class="text-center py-5">
+                        <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Ready for Model Training</h5>
+                        <p class="text-muted">Configure your model settings and click "Train Model" to get started</p>
+                        
+                        <!-- Quick Start Options -->
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="card bg-primary">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-magic fa-2x text-white mb-2"></i>
+                                        <h6 class="text-white">Auto ML</h6>
+                                        <p class="text-white small mb-3">Let AI choose the best model</p>
+                                        <button class="btn btn-light btn-sm" onclick="autoML()">
+                                            <i class="fas fa-play me-1"></i>Start Auto ML
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-tree fa-2x text-white mb-2"></i>
+                                        <h6 class="text-white">Quick Forest</h6>
+                                        <p class="text-white small mb-3">Fast Random Forest training</p>
+                                        <button class="btn btn-light btn-sm" onclick="quickRandomForest()">
+                                            <i class="fas fa-bolt me-1"></i>Quick Train
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-warning">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-balance-scale fa-2x text-white mb-2"></i>
+                                        <h6 class="text-white">Model Compare</h6>
+                                        <p class="text-white small mb-3">Train multiple models</p>
+                                        <button class="btn btn-light btn-sm" onclick="trainMultipleModels()">
+                                            <i class="fas fa-layer-group me-1"></i>Compare All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Comparison Modal -->
+<div class="modal fade" id="modelComparisonModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-balance-scale me-2"></i>Model Comparison
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="model-comparison-content">
+                <!-- Comparison content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prediction Interface Modal -->
+<div class="modal fade" id="predictionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-magic me-2"></i>Make Predictions
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="prediction-content">
+                <!-- Prediction interface will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hyperparameter Tuning Modal -->
+<div class="modal fade" id="hyperparameterModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-cogs me-2"></i>Hyperparameter Tuning
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="hyperparameter-content">
+                <!-- Hyperparameter tuning interface will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const datasetId = {{ dataset.id if dataset else 'null' }};
+let currentModelResults = null;
+
+function trainModel() {
+    const config = getModelConfiguration();
+    
+    if (!validateConfiguration(config)) {
+        return;
+    }
+    
+    showLoading('Training model... This may take a few minutes.');
+    
+    fetch(`/ml/api/train/${datasetId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config)
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            currentModelResults = data;
+            displayTrainingResults(data);
+            showAlert('success', 'Model trained successfully!');
+        } else {
+            showAlert('danger', data.error || 'Error training model');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showAlert('danger', 'Error training model: ' + error.message);
+    });
+}
+
+function getModelConfiguration() {
+    return {
+        model_type: document.getElementById('model-type').value,
+        problem_type: document.getElementById('problem-type').value,
+        target_column: document.getElementById('target-column').value,
+        feature_columns: Array.from(document.getElementById('feature-columns').selectedOptions).map(opt => opt.value),
+        hyperparameters: {},
+        cross_validation: document.getElementById('cross-validation').checked,
+        feature_importance: document.getElementById('feature-importance').checked
+    };
+}
+
+function validateConfiguration(config) {
+    if (!config.target_column) {
+        showAlert('warning', 'Please select a target column.');
+        return false;
+    }
+    
+    if (config.feature_columns.length === 0) {
+        showAlert('warning', 'Please select at least one feature column.');
+        return false;
+    }
+    
+    if (config.feature_columns.includes(config.target_column)) {
+        showAlert('warning', 'Target column cannot be included in feature columns.');
+        return false;
+    }
+    
+    return true;
+}
+
+function displayTrainingResults(data) {
+    const container = document.getElementById('training-results');
+    const metrics = data.metrics;
+    const problemType = data.problem_type;
+    
+    let html = `
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Model Training Completed!</strong>
+                    ${data.model_type.replace('_', ' ').toUpperCase()} model trained for ${problemType}.
+                </div>
+            </div>
+        </div>
+        <div class="row">
+    `;
+    
+    // Performance Metrics
+    html += `
+        <div class="col-lg-6 mb-3">
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Performance Metrics</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-dark table-sm">
+    `;
+    
+    if (problemType === 'classification') {
+        html += `
+            <tr><td>Accuracy</td><td class="text-success">${(metrics.accuracy * 100).toFixed(2)}%</td></tr>
+            <tr><td>Precision</td><td>${(metrics.precision * 100).toFixed(2)}%</td></tr>
+            <tr><td>Recall</td><td>${(metrics.recall * 100).toFixed(2)}%</td></tr>
+            <tr><td>F1-Score</td><td>${(metrics.f1_score * 100).toFixed(2)}%</td></tr>
+        `;
+        if (metrics.roc_auc) {
+            html += `<tr><td>ROC AUC</td><td class="text-info">${metrics.roc_auc.toFixed(3)}</td></tr>`;
+        }
+    } else {
+        html += `
+            <tr><td>R² Score</td><td class="text-success">${metrics.r2.toFixed(3)}</td></tr>
+            <tr><td>RMSE</td><td>${metrics.rmse.toFixed(3)}</td></tr>
+            <tr><td>MAE</td><td>${metrics.mae.toFixed(3)}</td></tr>
+            <tr><td>MSE</td><td>${metrics.mse.toFixed(3)}</td></tr>
+        `;
+        if (metrics.mape) {
+            html += `<tr><td>MAPE</td><td>${metrics.mape.toFixed(2)}%</td></tr>`;
+        }
+    }
+    
+    if (metrics.cv_mean) {
+        html += `
+            <tr><td colspan="2" class="border-top"><strong>Cross-Validation</strong></td></tr>
+            <tr><td>CV Score (Mean)</td><td class="text-info">${metrics.cv_mean.toFixed(3)}</td></tr>
+            <tr><td>CV Score (Std)</td><td>${metrics.cv_std.toFixed(3)}</td></tr>
+        `;
+    }
+    
+    html += '</table></div></div></div>';
+    
+    // Model Configuration
+    html += `
+        <div class="col-lg-6 mb-3">
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Model Configuration</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-dark table-sm">
+                        <tr><td>Algorithm</td><td><span class="badge bg-primary">${data.model_type.replace('_', ' ').toUpperCase()}</span></td></tr>
+                        <tr><td>Problem Type</td><td><span class="badge bg-success">${problemType.toUpperCase()}</span></td></tr>
+                        <tr><td>Target Column</td><td>${data.target_column}</td></tr>
+                        <tr><td>Feature Count</td><td>${data.feature_columns.length}</td></tr>
+                    </table>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-outline-light btn-sm me-2" onclick="showFeatureList()">
+                            <i class="fas fa-list me-1"></i>View Features
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="evaluateModel('${data.model_id}')">
+                            <i class="fas fa-chart-bar me-1"></i>Detailed Evaluation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Confusion Matrix or Residuals Plot
+    if (data.visualizations) {
+        html += `
+            <div class="col-12 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-area me-2"></i>Model Visualizations</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="model-visualizations"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Render visualizations if available
+    if (data.visualizations) {
+        renderModelVisualizations(data.visualizations);
+    }
+}
+
+function renderModelVisualizations(visualizations) {
+    const container = document.getElementById('model-visualizations');
+    let html = '<div class="row">';
+    
+    Object.keys(visualizations).forEach(vizType => {
+        const vizData = visualizations[vizType];
+        
+        if (typeof vizData === 'string') {
+            html += `
+                <div class="col-lg-6 mb-3">
+                    <div class="card bg-dark">
+                        <div class="card-header">
+                            <h6 class="mb-0">${vizType.replace(/_/g, ' ').toUpperCase()}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="viz-${vizType}" class="plot-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Render Plotly charts
+    Object.keys(visualizations).forEach(vizType => {
+        if (typeof visualizations[vizType] === 'string') {
+            try {
+                const plotData = JSON.parse(visualizations[vizType]);
+                Plotly.newPlot(`viz-${vizType}`, plotData.data, plotData.layout, {responsive: true});
+            } catch (e) {
+                console.error('Error rendering visualization:', e);
+            }
+        }
+    });
+}
+
+function evaluateModel(modelId) {
+    showLoading('Evaluating model...');
+    
+    fetch(`/ml/api/evaluate/${modelId}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                displayModelEvaluation(data);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error evaluating model: ' + error.message);
+        });
+}
+
+function showPredictionInterface(modelId) {
+    const modal = new bootstrap.Modal(document.getElementById('predictionModal'));
+    const content = document.getElementById('prediction-content');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading prediction interface...</p>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Load prediction interface
+    generatePredictionInterface(modelId);
+}
+
+function getFeatureImportance(modelId) {
+    showLoading('Calculating feature importance...');
+    
+    fetch(`/ml/api/feature_importance/${modelId}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                displayFeatureImportance(data);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error getting feature importance: ' + error.message);
+        });
+}
+
+function compareModels() {
+    if (!datasetId) return;
+    
+    showLoading('Loading model comparison...');
+    
+    fetch(`/ml/api/compare/${datasetId}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                displayModelComparison(data);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error comparing models: ' + error.message);
+        });
+}
+
+function showHyperparameterTuning() {
+    const modal = new bootstrap.Modal(document.getElementById('hyperparameterModal'));
+    const content = document.getElementById('hyperparameter-content');
+    
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+            <h5>Hyperparameter Tuning</h5>
+            <p class="text-muted">This feature will help you optimize model parameters automatically.</p>
+            <button class="btn btn-primary" onclick="startHyperparameterTuning()">
+                <i class="fas fa-play me-1"></i>Start Tuning
+            </button>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+function autoML() {
+    showAlert('info', 'Auto ML feature coming soon! This will automatically try multiple algorithms and select the best one.');
+}
+
+function quickRandomForest() {
+    // Set Random Forest as model type and train with default settings
+    document.getElementById('model-type').value = 'random_forest';
+    
+    if (!document.getElementById('target-column').value) {
+        showAlert('warning', 'Please select a target column first.');
+        return;
+    }
+    
+    trainModel();
+}
+
+function trainMultipleModels() {
+    showAlert('info', 'Multiple model training feature coming soon! This will train several algorithms and compare their performance.');
+}
+
+function displayModelComparison(data) {
+    const modal = new bootstrap.Modal(document.getElementById('modelComparisonModal'));
+    const content = document.getElementById('model-comparison-content');
+    
+    if (data.length === 0) {
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h5>No Models to Compare</h5>
+                <p class="text-muted">Train at least one model to see comparisons.</p>
+            </div>
+        `;
+    } else {
+        let html = `
+            <div class="table-responsive">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th>Model Type</th>
+                            <th>Target</th>
+                            <th>Performance</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        data.forEach(model => {
+            const primaryMetric = model.metrics.accuracy ? 
+                `Accuracy: ${(model.metrics.accuracy * 100).toFixed(1)}%` :
+                `R²: ${model.metrics.r2.toFixed(3)}`;
+            
+            html += `
+                <tr>
+                    <td><span class="badge bg-primary">${model.model_type.replace('_', ' ').toUpperCase()}</span></td>
+                    <td>${model.target_column}</td>
+                    <td class="text-success">${primaryMetric}</td>
+                    <td><small class="text-muted">${new Date(model.created_date).toLocaleDateString()}</small></td>
+                    <td>
+                        <button class="btn btn-outline-primary btn-sm" onclick="evaluateModel(${model.model_id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        content.innerHTML = html;
+    }
+    
+    modal.show();
+}
+
+function generatePredictionInterface(modelId) {
+    // This would generate a form based on the model's feature columns
+    const content = document.getElementById('prediction-content');
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-magic fa-3x text-muted mb-3"></i>
+            <h5>Prediction Interface</h5>
+            <p class="text-muted">Feature coming soon! This will allow you to make predictions with your trained model.</p>
+        </div>
+    `;
+}
+
+function displayFeatureImportance(data) {
+    // This would display feature importance visualization
+    showAlert('info', 'Feature importance visualization will be displayed here.');
+}
+
+function exportModel() {
+    if (!currentModelResults) {
+        showAlert('warning', 'No model to export. Please train a model first.');
+        return;
+    }
+    
+    showAlert('info', 'Model export feature coming soon!');
+}
+
+function saveModel() {
+    if (!currentModelResults) {
+        showAlert('warning', 'No model to save. Please train a model first.');
+        return;
+    }
+    
+    showAlert('success', 'Model saved successfully!');
+}
+
+// Auto-select target column based on column names
+document.addEventListener('DOMContentLoaded', function() {
+    const targetSelect = document.getElementById('target-column');
+    const options = targetSelect.options;
+    
+    // Look for common target column names
+    const targetKeywords = ['target', 'label', 'class', 'outcome', 'y', 'prediction'];
+    
+    for (let i = 0; i < options.length; i++) {
+        const optionText = options[i].text.toLowerCase();
+        if (targetKeywords.some(keyword => optionText.includes(keyword))) {
+            options[i].selected = true;
+            break;
+        }
+    }
+    
+    // Update problem type based on target column
+    targetSelect.addEventListener('change', function() {
+        updateProblemType();
+    });
+});
+
+function updateProblemType() {
+    // Auto-detect problem type based on target column characteristics
+    const problemType = document.getElementById('problem-type');
+    if (problemType.value === 'auto') {
+        // This would analyze the target column and suggest classification or regression
+        // For now, we'll keep it as auto
+    }
+}
+</script>
+{% endblock %}

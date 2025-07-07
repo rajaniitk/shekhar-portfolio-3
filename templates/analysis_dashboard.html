@@ -1,0 +1,611 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Dashboard - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Dataset Info Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card bg-dark border-primary sticky-top">
+            <div class="card-header bg-primary">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-database me-2"></i>Dataset Info
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if dataset %}
+                    <h6 class="text-primary">{{ dataset.filename }}</h6>
+                    <hr class="border-secondary">
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">File Type</small>
+                        <div><span class="badge bg-primary">{{ dataset.file_type.upper() }}</span></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Shape</small>
+                        <div>{{ dataset.shape_rows }} rows × {{ dataset.shape_cols }} columns</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Memory Usage</small>
+                        <div>{{ "%.2f"|format(dataset.memory_usage) }} MB</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Upload Date</small>
+                        <div>{{ dataset.upload_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    
+                    <hr class="border-secondary">
+                    
+                    <!-- Quick Actions -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-success btn-sm" onclick="generateEDA({{ dataset.id }})">
+                            <i class="fas fa-chart-bar me-1"></i>Full EDA
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="showStatTests({{ dataset.id }})">
+                            <i class="fas fa-calculator me-1"></i>Statistical Tests
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="showMLModels({{ dataset.id }})">
+                            <i class="fas fa-robot me-1"></i>ML Models
+                        </button>
+                        <a href="{{ url_for('upload.preview_dataset', dataset_id=dataset.id) }}" 
+                           class="btn btn-outline-secondary btn-sm" target="_blank">
+                            <i class="fas fa-eye me-1"></i>Preview Data
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <p class="text-muted">No dataset selected</p>
+                        <a href="{{ url_for('upload.upload_page') }}" class="btn btn-primary btn-sm">
+                            Upload Dataset
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Analysis Area -->
+    <div class="col-lg-9">
+        <!-- Analysis Tabs -->
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <ul class="nav nav-tabs card-header-tabs" id="analysis-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                                data-bs-target="#overview" type="button" role="tab">
+                            <i class="fas fa-info-circle me-1"></i>Overview
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="visualizations-tab" data-bs-toggle="tab" 
+                                data-bs-target="#visualizations" type="button" role="tab">
+                            <i class="fas fa-chart-line me-1"></i>Visualizations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="columns-tab" data-bs-toggle="tab" 
+                                data-bs-target="#columns" type="button" role="tab">
+                            <i class="fas fa-columns me-1"></i>Columns
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="correlations-tab" data-bs-toggle="tab" 
+                                data-bs-target="#correlations" type="button" role="tab">
+                            <i class="fas fa-project-diagram me-1"></i>Correlations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="insights-tab" data-bs-toggle="tab" 
+                                data-bs-target="#insights" type="button" role="tab">
+                            <i class="fas fa-lightbulb me-1"></i>Insights
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="analysis-tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                        {% if basic_stats %}
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card bg-secondary">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Dataset Overview</h6>
+                                            <table class="table table-dark table-sm">
+                                                <tr>
+                                                    <td>Rows</td>
+                                                    <td class="text-end">{{ "{:,}".format(basic_stats.dataset_overview.shape[0]) }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Columns</td>
+                                                    <td class="text-end">{{ basic_stats.dataset_overview.shape[1] }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Memory Usage</td>
+                                                    <td class="text-end">{{ "%.2f MB"|format(basic_stats.dataset_overview.memory_usage_mb) }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Duplicates</td>
+                                                    <td class="text-end">{{ "{:,}".format(basic_stats.dataset_overview.duplicate_rows) }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Missing Values</td>
+                                                    <td class="text-end text-{{ 'danger' if basic_stats.dataset_overview.missing_percentage > 10 else 'warning' if basic_stats.dataset_overview.missing_percentage > 5 else 'success' }}">
+                                                        {{ "%.1f%%"|format(basic_stats.dataset_overview.missing_percentage) }}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-secondary">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Column Types</h6>
+                                            <div class="row text-center">
+                                                <div class="col-4">
+                                                    <div class="text-primary">
+                                                        <i class="fas fa-hashtag fa-2x"></i>
+                                                        <div class="h4 mt-1">{{ basic_stats.column_types.numeric }}</div>
+                                                        <small>Numeric</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="text-success">
+                                                        <i class="fas fa-font fa-2x"></i>
+                                                        <div class="h4 mt-1">{{ basic_stats.column_types.categorical }}</div>
+                                                        <small>Categorical</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="text-warning">
+                                                        <i class="fas fa-calendar fa-2x"></i>
+                                                        <div class="h4 mt-1">{{ basic_stats.column_types.datetime }}</div>
+                                                        <small>DateTime</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card bg-primary">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-white">Quick Analysis</h6>
+                                        <div class="row g-2">
+                                            <div class="col-md-3">
+                                                <button class="btn btn-light w-100" onclick="generateFullEDA()">
+                                                    <i class="fas fa-chart-bar me-1"></i>
+                                                    Comprehensive EDA
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button class="btn btn-light w-100" onclick="generateVisualizations()">
+                                                    <i class="fas fa-chart-line me-1"></i>
+                                                    Generate Plots
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button class="btn btn-light w-100" onclick="runStatTests()">
+                                                    <i class="fas fa-calculator me-1"></i>
+                                                    Statistical Tests
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button class="btn btn-light w-100" onclick="generateInsights()">
+                                                    <i class="fas fa-lightbulb me-1"></i>
+                                                    AI Insights
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Analysis Results -->
+                        <div id="recent-results">
+                            <div class="text-center py-5">
+                                <i class="fas fa-play-circle fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Ready for Analysis</h5>
+                                <p class="text-muted">Click on any of the quick analysis buttons above to get started</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualizations Tab -->
+                    <div class="tab-pane fade" id="visualizations" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-chart-line me-2"></i>Visualization Options</h6>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button class="btn btn-primary btn-sm" onclick="generateAllVisualizations()">
+                                    <i class="fas fa-magic me-1"></i>Generate All
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4" id="viz-options">
+                            <!-- Visualization options will be populated here -->
+                        </div>
+                        
+                        <div id="visualization-container">
+                            <div class="text-center py-5">
+                                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Visualizations Generated</h5>
+                                <p class="text-muted">Select visualization types and click generate</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columns Tab -->
+                    <div class="tab-pane fade" id="columns" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-columns me-2"></i>Column Analysis</h6>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button class="btn btn-primary btn-sm" onclick="analyzeAllColumns()">
+                                    <i class="fas fa-search me-1"></i>Analyze All
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="columns-container">
+                            {% if columns %}
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Column</th>
+                                                <th>Type</th>
+                                                <th>Non-Null</th>
+                                                <th>Unique</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for column in columns %}
+                                            <tr>
+                                                <td>
+                                                    <i class="fas fa-{{ 'hashtag' if column in dataset.get_column_info() and dataset.get_column_info()[column].get('dtype', '').startswith(('int', 'float')) else 'font' }} me-2"></i>
+                                                    {{ column }}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'primary' if column in dataset.get_column_info() and dataset.get_column_info()[column].get('dtype', '').startswith(('int', 'float')) else 'success' }}">
+                                                        {{ dataset.get_column_info().get(column, {}).get('dtype', 'Unknown') }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ dataset.shape_rows - dataset.get_column_info().get(column, {}).get('null_count', 0) }}</td>
+                                                <td>{{ dataset.get_column_info().get(column, {}).get('unique_count', 'Unknown') }}</td>
+                                                <td>
+                                                    <button class="btn btn-outline-primary btn-sm" onclick="analyzeColumn('{{ column }}')">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-columns fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Column Information Available</h5>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Correlations Tab -->
+                    <div class="tab-pane fade" id="correlations" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-project-diagram me-2"></i>Correlation Analysis</h6>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button class="btn btn-primary btn-sm" onclick="generateCorrelations()">
+                                    <i class="fas fa-sync me-1"></i>Calculate Correlations
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="correlations-container">
+                            <div class="text-center py-5">
+                                <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Correlation Analysis</h5>
+                                <p class="text-muted">Click "Calculate Correlations" to analyze relationships between variables</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Insights Tab -->
+                    <div class="tab-pane fade" id="insights" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-lightbulb me-2"></i>AI-Powered Insights</h6>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button class="btn btn-primary btn-sm" onclick="generateAIInsights()">
+                                    <i class="fas fa-brain me-1"></i>Generate Insights
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="insights-container">
+                            <div class="text-center py-5">
+                                <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">AI Insights</h5>
+                                <p class="text-muted">Generate AI-powered insights and recommendations for your dataset</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const datasetId = {{ dataset.id if dataset else 'null' }};
+
+function generateEDA(id) {
+    if (!id) return;
+    
+    showLoading('Generating comprehensive EDA report...');
+    
+    fetch(`/analysis/api/eda/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                displayEDAResults(data);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error generating EDA: ' + error.message);
+        });
+}
+
+function generateFullEDA() {
+    generateEDA(datasetId);
+}
+
+function generateVisualizations() {
+    if (!datasetId) return;
+    
+    showLoading('Generating visualizations...');
+    
+    // Switch to visualizations tab
+    document.getElementById('visualizations-tab').click();
+    
+    // Generate common visualizations
+    const chartTypes = ['correlation_heatmap', 'distribution_plots', 'box_plots', 'pairplot'];
+    
+    fetch(`/visualization/api/generate/${datasetId}?` + new URLSearchParams({
+        charts: chartTypes
+    }))
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                displayVisualizations(data);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error generating visualizations: ' + error.message);
+        });
+}
+
+function runStatTests() {
+    if (!datasetId) return;
+    
+    window.location.href = `/statistics/${datasetId}`;
+}
+
+function generateInsights() {
+    if (!datasetId) return;
+    
+    showLoading('Generating AI insights...');
+    
+    // Switch to insights tab
+    document.getElementById('insights-tab').click();
+    
+    fetch(`/analysis/api/insights/${datasetId}`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.error) {
+                showAlert('danger', data.error);
+            } else {
+                displayInsights(data);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('danger', 'Error generating insights: ' + error.message);
+        });
+}
+
+function displayEDAResults(data) {
+    const container = document.getElementById('recent-results');
+    
+    let html = '<div class="row">';
+    
+    // Basic statistics
+    if (data.basic_stats) {
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Shape:</strong> ${data.basic_stats.dataset_overview.shape[0]} × ${data.basic_stats.dataset_overview.shape[1]}</p>
+                        <p><strong>Memory:</strong> ${data.basic_stats.dataset_overview.memory_usage_mb.toFixed(2)} MB</p>
+                        <p><strong>Missing:</strong> ${data.basic_stats.dataset_overview.missing_percentage.toFixed(1)}%</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Missing values analysis
+    if (data.missing_values) {
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Missing Values</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Missing:</strong> ${data.missing_values.summary.total_missing}</p>
+                        <p><strong>Affected Columns:</strong> ${data.missing_values.summary.columns_with_missing}</p>
+                        <p><strong>Complete Rows:</strong> ${data.missing_values.summary.complete_rows}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+function displayVisualizations(data) {
+    const container = document.getElementById('visualization-container');
+    
+    let html = '<div class="row">';
+    
+    Object.keys(data).forEach(vizType => {
+        if (vizType !== 'error') {
+            const vizData = data[vizType];
+            
+            if (typeof vizData === 'string') {
+                // Plotly JSON
+                html += `
+                    <div class="col-12 mb-4">
+                        <div class="card bg-secondary">
+                            <div class="card-header">
+                                <h6 class="mb-0">${vizType.replace(/_/g, ' ').toUpperCase()}</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="plot-${vizType}" class="plot-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Render Plotly charts
+    Object.keys(data).forEach(vizType => {
+        if (typeof data[vizType] === 'string') {
+            try {
+                const plotData = JSON.parse(data[vizType]);
+                Plotly.newPlot(`plot-${vizType}`, plotData.data, plotData.layout, {responsive: true});
+            } catch (e) {
+                console.error('Error rendering plot:', e);
+            }
+        }
+    });
+}
+
+function displayInsights(data) {
+    const container = document.getElementById('insights-container');
+    
+    let html = '';
+    
+    Object.keys(data).forEach(category => {
+        if (Array.isArray(data[category])) {
+            html += `
+                <div class="card bg-secondary mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">${category.replace(/_/g, ' ').toUpperCase()}</h6>
+                    </div>
+                    <div class="card-body">
+            `;
+            
+            data[category].forEach(insight => {
+                const iconClass = insight.severity === 'critical' ? 'fa-exclamation-triangle text-danger' :
+                                insight.severity === 'warning' ? 'fa-exclamation-circle text-warning' :
+                                'fa-info-circle text-info';
+                
+                html += `
+                    <div class="alert alert-dark border-${insight.severity === 'critical' ? 'danger' : insight.severity === 'warning' ? 'warning' : 'info'} mb-2">
+                        <i class="fas ${iconClass} me-2"></i>
+                        <strong>${insight.message}</strong>
+                        ${insight.details ? `<br><small class="text-muted">${insight.details}</small>` : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+        }
+    });
+    
+    container.innerHTML = html;
+}
+
+// Initialize visualization options
+document.addEventListener('DOMContentLoaded', function() {
+    const vizOptions = document.getElementById('viz-options');
+    if (vizOptions) {
+        vizOptions.innerHTML = `
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="viz-correlation" checked>
+                    <label class="form-check-label" for="viz-correlation">Correlation Heatmap</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="viz-distribution" checked>
+                    <label class="form-check-label" for="viz-distribution">Distribution Plots</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="viz-boxplot" checked>
+                    <label class="form-check-label" for="viz-boxplot">Box Plots</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="viz-scatter" checked>
+                    <label class="form-check-label" for="viz-scatter">Scatter Matrix</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="viz-violin">
+                    <label class="form-check-label" for="viz-violin">Violin Plots</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="viz-3d">
+                    <label class="form-check-label" for="viz-3d">3D Plots</label>
+                </div>
+            </div>
+        `;
+    }
+});
+</script>
+{% endblock %}

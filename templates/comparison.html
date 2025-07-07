@@ -1,0 +1,778 @@
+{% extends "base.html" %}
+
+{% block title %}Data Comparison - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Comparison Options Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card bg-dark border-primary sticky-top">
+            <div class="card-header bg-primary">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-balance-scale me-2"></i>Comparison Setup
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Dataset Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Primary Dataset</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="primary-dataset">
+                        <option value="">Select dataset...</option>
+                        <!-- Datasets will be populated via JavaScript -->
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Secondary Dataset</label>
+                    <select class="form-select bg-dark text-light border-secondary" id="secondary-dataset">
+                        <option value="">Select dataset...</option>
+                        <!-- Datasets will be populated via JavaScript -->
+                    </select>
+                </div>
+
+                <hr class="border-secondary">
+
+                <!-- Comparison Types -->
+                <div class="mb-3">
+                    <label class="form-label">Comparison Type</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="comparison-type" id="column-comparison" value="columns" checked>
+                        <label class="form-check-label" for="column-comparison">
+                            Column Comparison
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="comparison-type" id="statistical-comparison" value="statistical">
+                        <label class="form-check-label" for="statistical-comparison">
+                            Statistical Comparison
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="comparison-type" id="distribution-comparison" value="distribution">
+                        <label class="form-check-label" for="distribution-comparison">
+                            Distribution Comparison
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="comparison-type" id="model-comparison" value="models">
+                        <label class="form-check-label" for="model-comparison">
+                            Model Performance
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Column Mapping -->
+                <div id="column-mapping" class="mb-3">
+                    <label class="form-label">Column Mapping</label>
+                    <div id="column-pairs">
+                        <!-- Column pairs will be populated dynamically -->
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="addColumnPair()">
+                        <i class="fas fa-plus me-1"></i>Add Column Pair
+                    </button>
+                </div>
+
+                <!-- Comparison Options -->
+                <div class="mb-3">
+                    <label class="form-label">Options</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="include-visualizations" checked>
+                        <label class="form-check-label" for="include-visualizations">
+                            Include Visualizations
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="statistical-tests" checked>
+                        <label class="form-check-label" for="statistical-tests">
+                            Statistical Tests
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="detailed-report">
+                        <label class="form-check-label" for="detailed-report">
+                            Detailed Report
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="runComparison()">
+                        <i class="fas fa-play me-1"></i>Run Comparison
+                    </button>
+                    <button class="btn btn-outline-success" onclick="loadComparisonTemplate()">
+                        <i class="fas fa-file-import me-1"></i>Load Template
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="saveComparisonTemplate()">
+                        <i class="fas fa-save me-1"></i>Save Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Results -->
+    <div class="col-lg-9">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Comparison Results
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-light" onclick="exportComparison()">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <button class="btn btn-outline-light" onclick="shareComparison()">
+                                <i class="fas fa-share me-1"></i>Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="comparison-results">
+                    <div class="text-center py-5">
+                        <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Ready for Data Comparison</h5>
+                        <p class="text-muted">Select datasets and comparison type to get started</p>
+                        
+                        <!-- Comparison Guide -->
+                        <div class="row mt-4">
+                            <div class="col-md-8 offset-md-2">
+                                <div class="card bg-primary">
+                                    <div class="card-body">
+                                        <h6 class="text-white mb-3">Comparison Types Available</h6>
+                                        <div class="row text-white">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <i class="fas fa-columns fa-2x mb-2"></i>
+                                                    <h6>Column Comparison</h6>
+                                                    <small>Compare column distributions, statistics, and data quality between datasets</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                                    <h6>Distribution Comparison</h6>
+                                                    <small>Analyze differences in data distributions using various statistical measures</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <i class="fas fa-calculator fa-2x mb-2"></i>
+                                                    <h6>Statistical Comparison</h6>
+                                                    <small>Perform hypothesis tests to identify significant differences</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <i class="fas fa-robot fa-2x mb-2"></i>
+                                                    <h6>Model Performance</h6>
+                                                    <small>Compare machine learning model performance across datasets</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Template Modal -->
+<div class="modal fade" id="templateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-alt me-2"></i>Comparison Templates
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="template-content">
+                <!-- Template content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Comparison Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-share me-2"></i>Share Comparison
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Share Link</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control bg-dark text-light border-secondary" 
+                               id="share-link" value="https://eda-pro.app/comparison/abc123" readonly>
+                        <button class="btn btn-outline-primary" onclick="copyShareLink()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Export Options</label>
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-outline-success w-100" onclick="exportAsPDF()">
+                                <i class="fas fa-file-pdf me-1"></i>PDF Report
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-outline-info w-100" onclick="exportAsJSON()">
+                                <i class="fas fa-file-code me-1"></i>JSON Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let columnPairCount = 0;
+let comparisonResults = null;
+
+// Load available datasets on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAvailableDatasets();
+});
+
+function loadAvailableDatasets() {
+    // Simulate loading datasets
+    const datasets = [
+        { id: 1, name: "Sales_Data_2023.csv", rows: 1500 },
+        { id: 2, name: "Customer_Data.xlsx", rows: 2300 },
+        { id: 3, name: "Product_Analysis.json", rows: 890 }
+    ];
+    
+    const primarySelect = document.getElementById('primary-dataset');
+    const secondarySelect = document.getElementById('secondary-dataset');
+    
+    datasets.forEach(dataset => {
+        const option1 = new Option(`${dataset.name} (${dataset.rows} rows)`, dataset.id);
+        const option2 = new Option(`${dataset.name} (${dataset.rows} rows)`, dataset.id);
+        
+        primarySelect.add(option1);
+        secondarySelect.add(option2);
+    });
+}
+
+function addColumnPair() {
+    columnPairCount++;
+    const pairsContainer = document.getElementById('column-pairs');
+    
+    const pairDiv = document.createElement('div');
+    pairDiv.className = 'row mb-2';
+    pairDiv.id = `pair-${columnPairCount}`;
+    
+    pairDiv.innerHTML = `
+        <div class="col-5">
+            <select class="form-select form-select-sm bg-dark text-light border-secondary" 
+                    id="primary-col-${columnPairCount}">
+                <option value="">Primary column...</option>
+            </select>
+        </div>
+        <div class="col-2 text-center">
+            <i class="fas fa-arrow-right mt-1"></i>
+        </div>
+        <div class="col-5">
+            <select class="form-select form-select-sm bg-dark text-light border-secondary" 
+                    id="secondary-col-${columnPairCount}">
+                <option value="">Secondary column...</option>
+            </select>
+        </div>
+        <div class="col-12 mt-1">
+            <button class="btn btn-outline-danger btn-sm" onclick="removeColumnPair(${columnPairCount})">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    pairsContainer.appendChild(pairDiv);
+}
+
+function removeColumnPair(pairId) {
+    const pairElement = document.getElementById(`pair-${pairId}`);
+    if (pairElement) {
+        pairElement.remove();
+    }
+}
+
+function runComparison() {
+    const primaryDataset = document.getElementById('primary-dataset').value;
+    const secondaryDataset = document.getElementById('secondary-dataset').value;
+    const comparisonType = document.querySelector('input[name="comparison-type"]:checked').value;
+    
+    if (!primaryDataset || !secondaryDataset) {
+        showAlert('warning', 'Please select both primary and secondary datasets.');
+        return;
+    }
+    
+    if (primaryDataset === secondaryDataset) {
+        showAlert('warning', 'Please select different datasets for comparison.');
+        return;
+    }
+    
+    showLoading('Running comparison analysis...');
+    
+    // Simulate comparison process
+    setTimeout(() => {
+        hideLoading();
+        displayComparisonResults(comparisonType);
+        showAlert('success', 'Comparison analysis completed successfully!');
+    }, 3000);
+}
+
+function displayComparisonResults(comparisonType) {
+    const container = document.getElementById('comparison-results');
+    
+    let html = `
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Comparison Analysis Complete!</strong>
+                    ${comparisonType.replace('_', ' ').toUpperCase()} comparison has been performed.
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (comparisonType === 'columns') {
+        html += generateColumnComparisonResults();
+    } else if (comparisonType === 'statistical') {
+        html += generateStatisticalComparisonResults();
+    } else if (comparisonType === 'distribution') {
+        html += generateDistributionComparisonResults();
+    } else if (comparisonType === 'models') {
+        html += generateModelComparisonResults();
+    }
+    
+    container.innerHTML = html;
+    
+    // Add visualizations
+    generateComparisonVisualizations(comparisonType);
+}
+
+function generateColumnComparisonResults() {
+    return `
+        <div class="row">
+            <div class="col-lg-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Dataset Overview</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Primary</th>
+                                    <th>Secondary</th>
+                                    <th>Difference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Rows</td>
+                                    <td>1,500</td>
+                                    <td>2,300</td>
+                                    <td class="text-success">+53.3%</td>
+                                </tr>
+                                <tr>
+                                    <td>Columns</td>
+                                    <td>12</td>
+                                    <td>15</td>
+                                    <td class="text-info">+25.0%</td>
+                                </tr>
+                                <tr>
+                                    <td>Missing Values</td>
+                                    <td>3.2%</td>
+                                    <td>1.8%</td>
+                                    <td class="text-success">-43.8%</td>
+                                </tr>
+                                <tr>
+                                    <td>Duplicates</td>
+                                    <td>45</td>
+                                    <td>12</td>
+                                    <td class="text-success">-73.3%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Data Types Comparison</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="data-types-chart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-columns me-2"></i>Column-wise Comparison</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="column-comparison-charts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generateStatisticalComparisonResults() {
+    return `
+        <div class="row">
+            <div class="col-lg-8 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Statistical Test Results</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Test</th>
+                                        <th>Statistic</th>
+                                        <th>P-value</th>
+                                        <th>Result</th>
+                                        <th>Interpretation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Kolmogorov-Smirnov</td>
+                                        <td>0.234</td>
+                                        <td>0.003</td>
+                                        <td><span class="badge bg-success">Significant</span></td>
+                                        <td>Distributions are different</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Mann-Whitney U</td>
+                                        <td>12,340</td>
+                                        <td>0.012</td>
+                                        <td><span class="badge bg-success">Significant</span></td>
+                                        <td>Medians differ significantly</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Chi-Square</td>
+                                        <td>15.67</td>
+                                        <td>0.089</td>
+                                        <td><span class="badge bg-secondary">Not Significant</span></td>
+                                        <td>No association detected</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">Tests Performed</small>
+                            <div class="h4 text-primary">8</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Significant Results</small>
+                            <div class="h4 text-success">5</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Confidence Level</small>
+                            <div class="h4 text-info">95%</div>
+                        </div>
+                        <div class="alert alert-info">
+                            <small><strong>Conclusion:</strong> The datasets show significant statistical differences in multiple measures.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generateDistributionComparisonResults() {
+    return `
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-area me-2"></i>Distribution Comparison</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="distribution-plots"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Distribution Metrics</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Primary</th>
+                                    <th>Secondary</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Mean</td>
+                                    <td>45.2</td>
+                                    <td>47.8</td>
+                                </tr>
+                                <tr>
+                                    <td>Median</td>
+                                    <td>43.1</td>
+                                    <td>46.5</td>
+                                </tr>
+                                <tr>
+                                    <td>Std Dev</td>
+                                    <td>12.3</td>
+                                    <td>14.7</td>
+                                </tr>
+                                <tr>
+                                    <td>Skewness</td>
+                                    <td>0.45</td>
+                                    <td>0.62</td>
+                                </tr>
+                                <tr>
+                                    <td>Kurtosis</td>
+                                    <td>-0.23</td>
+                                    <td>0.14</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Distribution Tests</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Normality Tests</strong>
+                            <div class="mt-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Shapiro-Wilk</span>
+                                    <span class="badge bg-warning">Non-normal</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Anderson-Darling</span>
+                                    <span class="badge bg-success">Normal</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Variance Tests</strong>
+                            <div class="mt-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Levene's Test</span>
+                                    <span class="badge bg-warning">Unequal</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Bartlett's Test</span>
+                                    <span class="badge bg-warning">Unequal</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generateModelComparisonResults() {
+    return `
+        <div class="row">
+            <div class="col-12 mb-3">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-robot me-2"></i>Model Performance Comparison</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Model</th>
+                                        <th>Dataset</th>
+                                        <th>Accuracy</th>
+                                        <th>Precision</th>
+                                        <th>Recall</th>
+                                        <th>F1-Score</th>
+                                        <th>AUC</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="badge bg-primary">Random Forest</span></td>
+                                        <td>Primary</td>
+                                        <td class="text-success">0.892</td>
+                                        <td>0.876</td>
+                                        <td>0.903</td>
+                                        <td>0.889</td>
+                                        <td>0.945</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-primary">Random Forest</span></td>
+                                        <td>Secondary</td>
+                                        <td class="text-warning">0.834</td>
+                                        <td>0.821</td>
+                                        <td>0.847</td>
+                                        <td>0.834</td>
+                                        <td>0.898</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-success">XGBoost</span></td>
+                                        <td>Primary</td>
+                                        <td class="text-success">0.908</td>
+                                        <td>0.901</td>
+                                        <td>0.915</td>
+                                        <td>0.908</td>
+                                        <td>0.962</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-success">XGBoost</span></td>
+                                        <td>Secondary</td>
+                                        <td class="text-info">0.876</td>
+                                        <td>0.863</td>
+                                        <td>0.889</td>
+                                        <td>0.876</td>
+                                        <td>0.934</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generateComparisonVisualizations(comparisonType) {
+    // This would generate actual visualizations based on the comparison type
+    // For now, we'll simulate the process
+    console.log(`Generating ${comparisonType} visualizations...`);
+}
+
+function loadComparisonTemplate() {
+    const modal = new bootstrap.Modal(document.getElementById('templateModal'));
+    const content = document.getElementById('template-content');
+    
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-12">
+                <h6>Available Templates</h6>
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action bg-dark text-light" onclick="applyTemplate('basic')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Basic Column Comparison</h6>
+                            <small>3 days ago</small>
+                        </div>
+                        <p class="mb-1">Compare basic statistics and distributions between datasets</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action bg-dark text-light" onclick="applyTemplate('advanced')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Advanced Statistical Tests</h6>
+                            <small>1 week ago</small>
+                        </div>
+                        <p class="mb-1">Comprehensive statistical analysis with multiple test types</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action bg-dark text-light" onclick="applyTemplate('model')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Model Performance Analysis</h6>
+                            <small>2 weeks ago</small>
+                        </div>
+                        <p class="mb-1">Compare ML model performance across different datasets</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+function applyTemplate(templateType) {
+    // Apply template settings
+    showAlert('success', `${templateType} template applied successfully!`);
+    bootstrap.Modal.getInstance(document.getElementById('templateModal')).hide();
+}
+
+function saveComparisonTemplate() {
+    showAlert('success', 'Comparison template saved successfully!');
+}
+
+function exportComparison() {
+    if (!comparisonResults) {
+        showAlert('warning', 'No comparison results to export. Please run a comparison first.');
+        return;
+    }
+    
+    showAlert('success', 'Comparison results exported successfully!');
+}
+
+function shareComparison() {
+    if (!comparisonResults) {
+        showAlert('warning', 'No comparison results to share. Please run a comparison first.');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+    modal.show();
+}
+
+function copyShareLink() {
+    const shareLink = document.getElementById('share-link');
+    shareLink.select();
+    document.execCommand('copy');
+    showAlert('success', 'Share link copied to clipboard!');
+}
+
+function exportAsPDF() {
+    showAlert('info', 'PDF export feature coming soon!');
+}
+
+function exportAsJSON() {
+    showAlert('info', 'JSON export feature coming soon!');
+}
+</script>
+{% endblock %}

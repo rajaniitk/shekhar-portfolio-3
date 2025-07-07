@@ -1,0 +1,307 @@
+* * *
+## 🔍 Prompt: Build an Intelligent EDA + Feature Engineering Web App
+I want to build a _comprehensive AI-powered web application_ for _automated Exploratory Data Analysis (EDA),_ _statistical testing,_ **_feature engineering, and_** _column-wise analysis_, which should work with multiple dataset formats. The app should take a dataset (uploaded by the user in formats like .csv, .xlsx, .json, or .parquet) and output _detailed visual and textual analysis_, insights, and statistical recommendations. Here's the complete scope of the application.
+* * *
+### 🧩 Functionality Overview:
+#### 📁 1. File Upload and Parsing:
+*   Allow users to upload datasets in multiple formats:
+    
+    *   .csv
+        
+    *   .json
+        
+    *   .xlsx
+        
+    *   .parquet
+        
+*   Automatically detect file format and parse it correctly using pandas or suitable parsers.
+    
+*   Show a preview (e.g., first 10 and last 10 rows) of the dataset after loading.
+    
+*   Option to drop rows, handle missing values (drop/impute), and encode special characters in headers.
+    
+* * *
+#### 🧪 2. Exploratory Data Analysis (EDA):
+*   _Global EDA Report (overview):_
+    
+    *   Shape of the dataset
+        
+    *   Data types of columns
+        
+    *   Null value summary
+        
+    *   Unique values
+        
+    *   Duplicate row count
+        
+    *   Memory usage
+        
+    *   Basic statistics (mean, median, mode, std, min, max, etc.)
+        
+    *   Skewness and kurtosis
+        
+    *   Correlation matrix (Pearson, Spearman)
+        
+    *   Pairplot and heatmap
+        
+*   Option to export this EDA as a PDF/HTML report
+    
+* * *
+#### 📊 3. Visualizations:
+For each column (individually and pairwise), generate appropriate visualizations:
+*   For numerical columns:
+    
+    *   Histogram
+        
+    *   Boxplot
+        
+    *   KDE plot
+        
+    *   QQ plot
+        
+    *   Violin plot
+        
+    *   Scatter plots with other numeric columns
+        
+*   For categorical columns:
+    
+    *   Bar chart of value counts
+        
+    *   Pie chart
+        
+    *   Countplot
+        
+*   For numerical vs categorical:
+    
+    *   Boxplot split by category
+        
+    *   Violin plots
+        
+    *   Swarmplots
+        
+*   For date/time columns:
+    
+    *   Line plot over time
+        
+    *   Resampling support (monthly/weekly/yearly)
+        
+*   Matrix visualizations:
+    
+    *   Correlation heatmap
+        
+    *   Covariance matrix
+        
+    *   Cluster map
+        
+    *     
+        
+* * *
+#### 📐 4. Column-wise Detailed Analysis:
+Let the user _select one or more columns_ to explore in depth. For the selected column(s), the app should perform:
+*   _Univariate Analysis:_
+    
+    *   Summary statistics
+        
+    *   Missing value percentage
+        
+    *   Outlier detection using IQR/Z-score
+        
+    *   Distribution visualization
+        
+    *   Normality test (Shapiro-Wilk, Kolmogorov-Smirnov)
+        
+*   _Bivariate Analysis:_
+    
+    *   Comparison with target (if specified)
+        
+    *   ANOVA / t-test if categorical vs numeric
+        
+    *   Chi-square test for categorical vs categorical
+        
+    *   Correlation test for numeric vs numeric
+        
+*   _Multivariate Analysis:_
+    
+    *   VIF scores
+        
+    *   PCA visualizations
+        
+    *   Feature interaction heatmap
+        
+_Give_ natural language interpretation* of test results (e.g., "p-value < 0.05 suggests significant difference").
+* * *
+#### 🧪 5. Statistical Tests Module:
+For selected column(s), run _relevant statistical tests_:
+*   T-test (one-sample, two-sample, paired)
+    
+*   ANOVA (one-way, two-way)
+    
+*   Chi-square test
+    
+*   Pearson/Spearman correlation
+    
+*   Shapiro-Wilk, Anderson-Darling for normality
+    
+*   Levene's/Bartlett's test for equal variance
+    
+*   Mann–Whitney U / Kruskal-Wallis (for non-parametric)
+    
+*   Display:
+    
+    *   Null hypothesis
+        
+    *   Test statistic
+        
+    *   p-value
+        
+    *   Interpretation in plain English
+        
+* * *
+#### 🔄 6. Column-wise Feature Engineering:
+Suggest and perform _feature engineering_ techniques per column:
+*   For numerical columns:
+    
+    *   Binning (equal width, equal frequency)
+        
+    *   Standard scaling / Min-Max scaling / Robust scaling
+        
+    *   Log, square root, Box-Cox transformation
+        
+    *   Polynomial features
+        
+*   For categorical columns:
+    
+    *   One-hot encoding
+        
+    *   Label encoding
+        
+    *   Frequency/target encoding
+        
+    *   Group rare categories
+        
+*   For date/time:
+    
+    *   Extract year, month, day, weekday
+        
+    *   Cyclical encoding (sine/cosine for time)
+        
+*   For text columns:
+    
+    *   Word count, character count
+        
+    *   TF-IDF/Bag-of-Words
+        
+    *   Sentiment scores
+        
+    *   Embedding suggestions
+        
+Each transformation should include:
+*   Before/after visual
+    
+*   Change in distribution/statistics
+    
+*   Option to revert
+    
+* * *
+#### 🧠 7. Column Comparison Engine:
+Enable users to select _two or more columns_ and compare them:
+*   Numerical vs Numerical:
+    
+    *   Scatter plot + regression line
+        
+    *   Pearson/Spearman correlation with interpretation
+        
+    *   Jointplot / Hexbin
+        
+*   Categorical vs Categorical:
+    
+    *   Crosstab + Chi-square test
+        
+    *   Mosaic plot
+        
+*   Numerical vs Categorical:
+    
+    *   Boxplot by category
+        
+    *   ANOVA test
+        
+    *   Mean/median difference plots
+        
+*   Output:
+    
+    *   Statistical test summary
+        
+    *   Visualizations
+        
+    *   Recommendation: Which feature is more relevant? Is there a significant difference?
+        
+    *   Suggest potential feature interaction
+        
+* * *
+#### 📈 8. Recommendations and Insights:
+AI-generated recommendations should appear after each section:
+*   Highlight high-variance columns
+    
+*   Detect collinearity
+    
+*   Suggest dropping/replacing missing columns
+    
+*   Suggest transformations (e.g., "Column X is highly skewed. Apply log transform.")
+    
+*   Detect low variance or constant features
+    
+*   Flag features with high p-values (non-significant)
+    
+*   Mark ideal candidates for feature selection
+    
+*   Use basic ML models (like SelectKBest) to rank features
+    
+* * *
+#### ⚙ 9. Advanced Configuration:
+*   Option to choose target column (classification or regression)
+    
+*   Custom statistical test selection
+    
+*   Enable/disable specific modules (e.g., visualizations only, no test results)
+    
+*   Download entire analysis as HTML or PDF
+    
+* * *
+#### 🎛 10. Tech Stack (Suggested):
+*   _Frontend:_ Streamlit or Gradio
+    
+*   _Backend:_ Python (Pandas, NumPy, SciPy, Scikit-learn, Statsmodels, Plotly/Seaborn/Matplotlib)
+    
+*   _NLP Engine (optional):_ Use GPT/OpenAI API to explain insights or test results
+    
+*   _Deployment:_ Streamlit Cloud / HuggingFace Spaces / AWS / Render
+    
+* * *
+### 🚀 Example Use Case Flow:
+1.  Upload a dataset (e.g., .csv file of medical records).
+    
+2.  See full dataset preview and missing value report.
+    
+3.  Select age, blood_pressure, and diagnosis columns.
+    
+4.  Get distribution plots, normality tests, ANOVA results between blood_pressure and diagnosis.
+    
+5.  App recommends binning age, one-hot encoding diagnosis.
+    
+6.  Select comparison between blood_pressure and cholesterol_level.
+    
+7.  Get correlation, plots, and recommendation (e.g., "Both features are correlated, consider combining or removing one").
+    
+8.  Download the full EDA + analysis report as PDF.
+    
+* * *
+### 📋 Final Deliverables:
+*   Full source code with modular structure
+    
+*   Reusable components for EDA, visualization, statistical testing
+    
+*   Option to integrate as a pip installable package (autoeda)
+    
+*   Deployment-ready UI with documentation
+    
+*   Example datasets + sample reports

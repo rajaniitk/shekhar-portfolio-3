@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - EDA Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-12 mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="card bg-gradient-primary border-0 shadow">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="card-title text-white opacity-75">Total Datasets</h5>
+                                <h2 class="text-white mb-0">{{ stats.total_datasets }}</h2>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-database fa-2x text-white opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-gradient-success border-0 shadow">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="card-title text-white opacity-75">Analyses</h5>
+                                <h2 class="text-white mb-0">{{ stats.total_analyses }}</h2>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-chart-line fa-2x text-white opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-gradient-warning border-0 shadow">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="card-title text-white opacity-75">ML Models</h5>
+                                <h2 class="text-white mb-0">{{ stats.total_models }}</h2>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-robot fa-2x text-white opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-gradient-info border-0 shadow">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="card-title text-white opacity-75">Active Sessions</h5>
+                                <h2 class="text-white mb-0" id="active-sessions">1</h2>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-white opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-12 mb-4">
+        <div class="card bg-dark border-primary">
+            <div class="card-header bg-primary">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <a href="{{ url_for('upload.upload_page') }}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="fas fa-upload fa-2x d-block mb-2"></i>
+                            Upload Dataset
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <button class="btn btn-outline-success w-100 py-3" onclick="quickEDA()">
+                            <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                            Quick EDA
+                        </button>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <button class="btn btn-outline-warning w-100 py-3" onclick="quickStats()">
+                            <i class="fas fa-calculator fa-2x d-block mb-2"></i>
+                            Statistical Tests
+                        </button>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <button class="btn btn-outline-info w-100 py-3" onclick="quickML()">
+                            <i class="fas fa-robot fa-2x d-block mb-2"></i>
+                            Train Model
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Datasets -->
+    <div class="col-lg-8 mb-4">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-database me-2"></i>Recent Datasets
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_datasets %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Shape</th>
+                                    <th>Upload Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dataset in recent_datasets %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file-csv me-2 text-primary"></i>
+                                        {{ dataset.filename }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ dataset.file_type.upper() }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">{{ dataset.shape_rows }} × {{ dataset.shape_cols }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ dataset.upload_date[:16].replace('T', ' ') if dataset.upload_date else 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analysis.dataset_overview', dataset_id=dataset.id) }}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button class="btn btn-outline-success btn-sm" 
+                                                    onclick="startAnalysis({{ dataset.id }})">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    onclick="deleteDataset({{ dataset.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-database fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No datasets uploaded yet</h5>
+                        <p class="text-muted">Upload your first dataset to get started with analysis</p>
+                        <a href="{{ url_for('upload.upload_page') }}" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Upload Dataset
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Analyses -->
+    <div class="col-lg-4 mb-4">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-secondary">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Recent Analyses
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_analyses %}
+                    <div class="timeline">
+                        {% for analysis in recent_analyses %}
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <div class="timeline-marker bg-primary"></div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">{{ analysis.analysis_type.replace('_', ' ').title() }}</h6>
+                                    <p class="mb-1 text-muted small">
+                                        Dataset: {{ analysis.dataset.filename }}
+                                    </p>
+                                    <small class="text-muted">
+                                        {{ analysis.created_date.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No analyses yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Modal -->
+<div class="modal fade" id="analysisModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-bar me-2"></i>Quick Analysis
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="analysis-content">
+                <!-- Analysis content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function quickEDA() {
+    // Check if there are any datasets
+    if ({{ stats.total_datasets }} === 0) {
+        showAlert('warning', 'No datasets available. Please upload a dataset first.');
+        return;
+    }
+    
+    // Show dataset selection modal for quick EDA
+    showDatasetSelector('eda');
+}
+
+function quickStats() {
+    if ({{ stats.total_datasets }} === 0) {
+        showAlert('warning', 'No datasets available. Please upload a dataset first.');
+        return;
+    }
+    
+    showDatasetSelector('stats');
+}
+
+function quickML() {
+    if ({{ stats.total_datasets }} === 0) {
+        showAlert('warning', 'No datasets available. Please upload a dataset first.');
+        return;
+    }
+    
+    showDatasetSelector('ml');
+}
+
+function startAnalysis(datasetId) {
+    window.location.href = `/analysis/dataset/${datasetId}`;
+}
+
+function deleteDataset(datasetId) {
+    if (confirm('Are you sure you want to delete this dataset? This action cannot be undone.')) {
+        window.location.href = `/delete_dataset/${datasetId}`;
+    }
+}
+
+function showDatasetSelector(type) {
+    // This would show a modal to select dataset for quick actions
+    // For now, redirect to the first available dataset
+    const recentDatasets = {{ recent_datasets | tojson | safe }};
+    if (recentDatasets.length > 0) {
+        const datasetId = recentDatasets[0].id;
+        
+        switch(type) {
+            case 'eda':
+                window.location.href = `/analysis/dataset/${datasetId}`;
+                break;
+            case 'stats':
+                window.location.href = `/statistics/${datasetId}`;
+                break;
+            case 'ml':
+                window.location.href = `/ml/${datasetId}`;
+                break;
+        }
+    }
+}
+
+// Update dataset count in navbar
+document.getElementById('dataset-count').textContent = {{ stats.total_datasets }};
+</script>
+{% endblock %}
