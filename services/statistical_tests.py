@@ -29,7 +29,7 @@ class StatisticalTestEngine:
                 results['shapiro_wilk'] = {
                     'statistic': float(shapiro_stat),
                     'p_value': float(shapiro_p),
-                    'is_normal': shapiro_p > self.alpha,
+                    'is_normal': bool(shapiro_p > self.alpha),
                     'interpretation': f"Data is {'normally' if shapiro_p > self.alpha else 'not normally'} distributed (p = {shapiro_p:.4f})"
                 }
             
@@ -38,7 +38,7 @@ class StatisticalTestEngine:
             results['kolmogorov_smirnov'] = {
                 'statistic': float(ks_stat),
                 'p_value': float(ks_p),
-                'is_normal': ks_p > self.alpha,
+                'is_normal': bool(ks_p > self.alpha),
                 'interpretation': f"Data is {'normally' if ks_p > self.alpha else 'not normally'} distributed (p = {ks_p:.4f})"
             }
             
@@ -49,7 +49,7 @@ class StatisticalTestEngine:
                 'statistic': float(ad_stat),
                 'critical_values': ad_critical.tolist(),
                 'significance_levels': ad_sig.tolist(),
-                'is_normal': ad_normal,
+                'is_normal': bool(ad_normal),
                 'interpretation': f"Data is {'normally' if ad_normal else 'not normally'} distributed"
             }
             
@@ -59,7 +59,7 @@ class StatisticalTestEngine:
                 results['dagostino_pearson'] = {
                     'statistic': float(dp_stat),
                     'p_value': float(dp_p),
-                    'is_normal': dp_p > self.alpha,
+                    'is_normal': bool(dp_p > self.alpha),
                     'interpretation': f"Data is {'normally' if dp_p > self.alpha else 'not normally'} distributed (p = {dp_p:.4f})"
                 }
             except:
@@ -71,7 +71,7 @@ class StatisticalTestEngine:
                 results['jarque_bera'] = {
                     'statistic': float(jb_stat),
                     'p_value': float(jb_p),
-                    'is_normal': jb_p > self.alpha,
+                    'is_normal': bool(jb_p > self.alpha),
                     'interpretation': f"Data is {'normally' if jb_p > self.alpha else 'not normally'} distributed (p = {jb_p:.4f})"
                 }
             except:
@@ -83,7 +83,7 @@ class StatisticalTestEngine:
                 results['lilliefors'] = {
                     'statistic': float(lillie_stat),
                     'p_value': float(lillie_p),
-                    'is_normal': lillie_p > self.alpha,
+                    'is_normal': bool(lillie_p > self.alpha),
                     'interpretation': f"Data is {'normally' if lillie_p > self.alpha else 'not normally'} distributed (p = {lillie_p:.4f})"
                 }
             except:
@@ -115,7 +115,7 @@ class StatisticalTestEngine:
             results['levene'] = {
                 'statistic': float(levene_stat),
                 'p_value': float(levene_p),
-                'equal_variances': levene_p > self.alpha,
+                'equal_variances': bool(levene_p > self.alpha),
                 'interpretation': f"Variances are {'equal' if levene_p > self.alpha else 'not equal'} (p = {levene_p:.4f})"
             }
             
@@ -125,7 +125,7 @@ class StatisticalTestEngine:
                 results['bartlett'] = {
                     'statistic': float(bartlett_stat),
                     'p_value': float(bartlett_p),
-                    'equal_variances': bartlett_p > self.alpha,
+                    'equal_variances': bool(bartlett_p > self.alpha),
                     'interpretation': f"Variances are {'equal' if bartlett_p > self.alpha else 'not equal'} (p = {bartlett_p:.4f})"
                 }
             except:
@@ -137,7 +137,7 @@ class StatisticalTestEngine:
                 results['fligner_killeen'] = {
                     'statistic': float(fk_stat),
                     'p_value': float(fk_p),
-                    'equal_variances': fk_p > self.alpha,
+                    'equal_variances': bool(fk_p > self.alpha),
                     'interpretation': f"Variances are {'equal' if fk_p > self.alpha else 'not equal'} (p = {fk_p:.4f})"
                 }
             except:
@@ -149,7 +149,7 @@ class StatisticalTestEngine:
                 results['brown_forsythe'] = {
                     'statistic': float(bf_stat),
                     'p_value': float(bf_p),
-                    'equal_variances': bf_p > self.alpha,
+                    'equal_variances': bool(bf_p > self.alpha),
                     'interpretation': f"Variances are {'equal' if bf_p > self.alpha else 'not equal'} (p = {bf_p:.4f})"
                 }
             except:
@@ -182,7 +182,7 @@ class StatisticalTestEngine:
             results['pearson'] = {
                 'correlation': float(pearson_r),
                 'p_value': float(pearson_p),
-                'significant': pearson_p < self.alpha,
+                'significant': bool(pearson_p < self.alpha),
                 'interpretation': f"{'Strong' if abs(pearson_r) >= 0.7 else 'Moderate' if abs(pearson_r) >= 0.3 else 'Weak'} correlation (r = {pearson_r:.3f}, p = {pearson_p:.4f})"
             }
             
@@ -191,7 +191,7 @@ class StatisticalTestEngine:
             results['spearman'] = {
                 'correlation': float(spearman_r),
                 'p_value': float(spearman_p),
-                'significant': spearman_p < self.alpha,
+                'significant': bool(spearman_p < self.alpha),
                 'interpretation': f"{'Strong' if abs(spearman_r) >= 0.7 else 'Moderate' if abs(spearman_r) >= 0.3 else 'Weak'} rank correlation (ρ = {spearman_r:.3f}, p = {spearman_p:.4f})"
             }
             
@@ -200,7 +200,7 @@ class StatisticalTestEngine:
             results['kendall'] = {
                 'correlation': float(kendall_tau),
                 'p_value': float(kendall_p),
-                'significant': kendall_p < self.alpha,
+                'significant': bool(kendall_p < self.alpha),
                 'interpretation': f"{'Strong' if abs(kendall_tau) >= 0.7 else 'Moderate' if abs(kendall_tau) >= 0.3 else 'Weak'} rank correlation (τ = {kendall_tau:.3f}, p = {kendall_p:.4f})"
             }
             
@@ -211,7 +211,7 @@ class StatisticalTestEngine:
                     results['point_biserial'] = {
                         'correlation': float(pb_r),
                         'p_value': float(pb_p),
-                        'significant': pb_p < self.alpha,
+                        'significant': bool(pb_p < self.alpha),
                         'interpretation': f"Point-biserial correlation: {pb_r:.3f} (p = {pb_p:.4f})"
                     }
                 except:
@@ -246,7 +246,7 @@ class StatisticalTestEngine:
                 results['paired_ttest'] = {
                     'statistic': float(t_stat),
                     'p_value': float(t_p),
-                    'significant': t_p < self.alpha,
+                    'significant': bool(t_p < self.alpha),
                     'mean_difference': float(np.mean(group1_clean - group2_clean)),
                     'interpretation': f"{'Significant' if t_p < self.alpha else 'No significant'} difference between paired groups (t = {t_stat:.3f}, p = {t_p:.4f})"
                 }
@@ -258,7 +258,7 @@ class StatisticalTestEngine:
                 results['welch_ttest'] = {
                     'statistic': float(welch_t),
                     'p_value': float(welch_p),
-                    'significant': welch_p < self.alpha,
+                    'significant': bool(welch_p < self.alpha),
                     'mean_difference': float(np.mean(group1_clean) - np.mean(group2_clean)),
                     'interpretation': f"{'Significant' if welch_p < self.alpha else 'No significant'} difference between groups (t = {welch_t:.3f}, p = {welch_p:.4f})"
                 }
@@ -268,7 +268,7 @@ class StatisticalTestEngine:
                 results['student_ttest'] = {
                     'statistic': float(student_t),
                     'p_value': float(student_p),
-                    'significant': student_p < self.alpha,
+                    'significant': bool(student_p < self.alpha),
                     'mean_difference': float(np.mean(group1_clean) - np.mean(group2_clean)),
                     'interpretation': f"{'Significant' if student_p < self.alpha else 'No significant'} difference between groups (t = {student_t:.3f}, p = {student_p:.4f})"
                 }
@@ -312,7 +312,7 @@ class StatisticalTestEngine:
             results['one_way_anova'] = {
                 'f_statistic': float(f_stat),
                 'p_value': float(f_p),
-                'significant': f_p < self.alpha,
+                'significant': bool(f_p < self.alpha),
                 'interpretation': f"{'Significant' if f_p < self.alpha else 'No significant'} difference between groups (F = {f_stat:.3f}, p = {f_p:.4f})"
             }
             
@@ -321,7 +321,7 @@ class StatisticalTestEngine:
             results['kruskal_wallis'] = {
                 'h_statistic': float(kw_stat),
                 'p_value': float(kw_p),
-                'significant': kw_p < self.alpha,
+                'significant': bool(kw_p < self.alpha),
                 'interpretation': f"{'Significant' if kw_p < self.alpha else 'No significant'} difference between groups (H = {kw_stat:.3f}, p = {kw_p:.4f})"
             }
             
@@ -364,7 +364,7 @@ class StatisticalTestEngine:
                 'chi2_statistic': float(chi2_stat),
                 'p_value': float(chi2_p),
                 'degrees_of_freedom': int(dof),
-                'significant': chi2_p < self.alpha,
+                'significant': bool(chi2_p < self.alpha),
                 'interpretation': f"Variables are {'dependent' if chi2_p < self.alpha else 'independent'} (χ² = {chi2_stat:.3f}, p = {chi2_p:.4f})"
             }
             
@@ -393,7 +393,7 @@ class StatisticalTestEngine:
                     results['fisher_exact'] = {
                         'odds_ratio': float(oddsratio),
                         'p_value': float(fisher_p),
-                        'significant': fisher_p < self.alpha,
+                        'significant': bool(fisher_p < self.alpha),
                         'interpretation': f"Fisher's exact test: {'significant' if fisher_p < self.alpha else 'not significant'} (p = {fisher_p:.4f})"
                     }
                 except:
@@ -424,7 +424,7 @@ class StatisticalTestEngine:
             results['mann_whitney_u'] = {
                 'u_statistic': float(mw_stat),
                 'p_value': float(mw_p),
-                'significant': mw_p < self.alpha,
+                'significant': bool(mw_p < self.alpha),
                 'interpretation': f"{'Significant' if mw_p < self.alpha else 'No significant'} difference in distributions (U = {mw_stat:.3f}, p = {mw_p:.4f})"
             }
             
@@ -433,7 +433,7 @@ class StatisticalTestEngine:
             results['wilcoxon_ranksum'] = {
                 'z_statistic': float(wilcoxon_stat),
                 'p_value': float(wilcoxon_p),
-                'significant': wilcoxon_p < self.alpha,
+                'significant': bool(wilcoxon_p < self.alpha),
                 'interpretation': f"{'Significant' if wilcoxon_p < self.alpha else 'No significant'} difference in distributions (Z = {wilcoxon_stat:.3f}, p = {wilcoxon_p:.4f})"
             }
             
@@ -442,7 +442,7 @@ class StatisticalTestEngine:
             results['kolmogorov_smirnov_2sample'] = {
                 'ks_statistic': float(ks_stat),
                 'p_value': float(ks_p),
-                'significant': ks_p < self.alpha,
+                'significant': bool(ks_p < self.alpha),
                 'interpretation': f"Distributions are {'different' if ks_p < self.alpha else 'not significantly different'} (D = {ks_stat:.3f}, p = {ks_p:.4f})"
             }
             
@@ -453,7 +453,7 @@ class StatisticalTestEngine:
                     'chi2_statistic': float(mood_stat),
                     'p_value': float(mood_p),
                     'grand_median': float(mood_m),
-                    'significant': mood_p < self.alpha,
+                    'significant': bool(mood_p < self.alpha),
                     'interpretation': f"Medians are {'different' if mood_p < self.alpha else 'not significantly different'} (χ² = {mood_stat:.3f}, p = {mood_p:.4f})"
                 }
             except:

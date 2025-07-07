@@ -271,7 +271,7 @@ class EDAEngine:
                         normality_tests['shapiro_wilk'] = {
                             'statistic': float(shapiro_stat),
                             'p_value': float(shapiro_p),
-                            'is_normal': shapiro_p > 0.05
+                            'is_normal': bool(shapiro_p > 0.05)
                         }
                     
                     # Kolmogorov-Smirnov test
@@ -279,7 +279,7 @@ class EDAEngine:
                     normality_tests['kolmogorov_smirnov'] = {
                         'statistic': float(ks_stat),
                         'p_value': float(ks_p),
-                        'is_normal': ks_p > 0.05
+                        'is_normal': bool(ks_p > 0.05)
                     }
                     
                     # Anderson-Darling test
